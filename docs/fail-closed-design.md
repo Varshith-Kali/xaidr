@@ -34,7 +34,7 @@ deploy log, not in a customer incident.
 | A4 | `scanner/normalizer.py:66-78` | `typo-keywords.json` corrupt | `print`; normalization silently disabled | refuse to construct |
 | A5 | `l1.py:342`, `l2.py:62`, `classifier.py:68,82,94,106` | ONE regex fails to compile | `print`; that rule is dropped, the other ~159 load | raise, as `UnknownRuleCategory` already does at `l1.py:289` |
 | A6 | `local_policy.py:107-132` | PyYAML absent / file unreadable / policy malformed | `logger.warning`; `None`; **detection-only** | refuse to construct when a policy was *named* |
-| A7 | `local_policy.py:150-153` | `set_policy()` handed a malformed dict | warning; `None`; returns `False` | already semi-closed — the return value is readable |
+| A7 | `local_policy.py` `adopt_policy` | `set_policy()` handed a malformed dict | ~~warning; `None`; returns `False`~~ **Superseded:** refused at ERROR; the policy already in force keeps enforcing; returns `False` | closed — keep-last-good (`tests/test_policy_keep_last_good.py`) |
 | A8 | `scanner/nano.py:837-840`, `scanner/local.py:1089-1092` | nano inference raises / non-finite probability | `p_raw=0.0`, family `none` — the signal the operator enabled is silently absent | block, or refuse to construct on repeat |
 | A9 | `scanner/local.py:390-398` | an escalator's `health()` reports unhealthy or raises | logged; **the link is kept anyway** | refuse to construct |
 

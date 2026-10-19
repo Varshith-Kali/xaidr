@@ -279,14 +279,19 @@ def test_rule_with_nothing_to_match_on_is_rejected(rule, label, caplog):
     )
 
 
-def test_unknown_keys_outside_match_are_still_ignored():
-    """Scope guard: only match:/conditions: keys disarm a rule, so only they are
-    rejected. An unknown key at rule or top level stays ignored as documented."""
-    assert _sensor().set_policy({
-        "version": "1", "defaults": {"effect": "allow"}, "some_future_field": 1,
-        "rules": [{"id": "x", "effect": "block", "match": {"tools": ["t"]},
-                   "description": "unknown rule-level key, harmless"}],
-    }) is True
+def test_unknown_keys_outside_match_are_refused_too():
+    """An unknown key at rule or top level is refused like one under match:.
+
+    This test previously asserted the opposite, that such keys were ignored as
+    harmless. That premise was false and is retracted here: an ignored key is a
+    part of the policy that was written and not enforced. Per-field cases are in
+    test_policy_refuse_never_drop.py."""
+    base = {"version": "1", "defaults": {"effect": "allow"},
+            "rules": [{"id": "x", "effect": "block", "match": {"tools": ["t"]}}]}
+    assert _sensor().set_policy(base) is True
+    assert _sensor().set_policy({**base, "some_future_field": 1}) is False
+    assert _sensor().set_policy({**base, "rules": [
+        {**base["rules"][0], "description": "unknown rule-level key"}]}) is False
 
 
 # ── A-12 ─────────────────────────────────────────────────────────────────────

@@ -11,8 +11,10 @@ the unregistered half proves open did not move. A test that only demonstrates
 the first is indistinguishable from one asserting something already true.
 
 THREE ENTRY POINTS, not the two the design doc named. `parse_action_policy` is
-reached by `load_policy` (a policy FILE) and by `set_policy_dict` (the public
-`Sensor.set_policy()` runtime API). The doc listed only the first; wiring only
+reached by `load_policy` (a policy FILE) and by `adopt_policy` (the public
+`Sensor.set_policy()` runtime API; it backed onto `set_policy_dict` until
+keep-last-good, and both forward the conditions). The doc listed only the
+first; wiring only
 that one would leave `Sensor(extensions=[...]).set_policy({...})` rejecting the
 extension's own condition. That is the S7 census lesson: enumerate from the
 tree, never from a document's line list.
@@ -131,7 +133,7 @@ def test_sensor_collects_conditions_from_its_extensions():
 
 def test_set_policy_accepts_an_extension_condition():
     """The entry point the design doc missed. `set_policy` goes through
-    `set_policy_dict`, not `load_policy`."""
+    `adopt_policy`, not `load_policy`."""
     s = Sensor(agent_id="s2-set", extensions=[_GeoExtension()])
     assert s.set_policy(_policy({CUSTOM: "EU"})) is True
 
@@ -140,6 +142,15 @@ def test_set_policy_rejects_the_same_policy_on_a_bare_sensor():
     """The negative half of the test above, and the one that shows the seam is
     doing the work rather than the key having become globally valid."""
     assert Sensor(agent_id="s2-set-bare").set_policy(_policy({CUSTOM: "EU"})) is False
+
+
+def test_adopt_policy_forwards_extra_conditions():
+    from xaidr.local_policy import adopt_policy
+    assert adopt_policy(_policy({CUSTOM: "EU"}), in_force=lambda: None) is None
+    assert adopt_policy(
+        _policy({CUSTOM: "EU"}), in_force=lambda: None,
+        extra_conditions={CUSTOM: lambda ctx, v: True},
+    ) is not None
 
 
 def test_set_policy_dict_forwards_extra_conditions():

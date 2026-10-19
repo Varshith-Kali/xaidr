@@ -1589,8 +1589,13 @@ class DelphiSensor:
         )
 
     def set_policy(self, policy: dict | None) -> bool:
-        """Set the local authorization policy from a dict. Returns True if a
-        valid policy was applied, False if it was malformed/cleared."""
+        """Set the local authorization policy from a dict.
+
+        Returns True if the policy was applied. A refused policy returns False
+        and leaves the policy that was already in force (an earlier
+        ``set_policy()``, or the policy file loaded at construction) enforcing.
+        ``None`` is an explicit clear: it removes the policy and returns False.
+        """
         if policy is None:
             self._policy = None
             return False
@@ -1598,11 +1603,14 @@ class DelphiSensor:
         # at runtime must accept exactly the keys a policy FILE would have.
         # Missing this is how set_policy() would reject an extension's own
         # condition on a sensor that was built to understand it.
-        parsed = _policy.set_policy_dict(
-            policy, extra_conditions=self._policy_conditions
+        parsed = _policy.adopt_policy(
+            policy, in_force=lambda: self._policy,
+            extra_conditions=self._policy_conditions,
         )
+        if parsed is None:
+            return False
         self._policy = parsed
-        return parsed is not None
+        return True
 
     def _apply_mode(
         self, result: ScanResult, direction: Optional[str] = None, req_fields=None
