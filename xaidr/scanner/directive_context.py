@@ -356,14 +356,15 @@ _QUOTED_ATTACK = re.compile(
 # frames ("for example", "in this tutorial", "the attacker types:") that a LIVE
 # framed attack also uses — those must stay blockable, so they are not here.
 #
-# THIS ALTERNATION IS NOT EVIDENCE OF ANYTHING (FINDING-14). It says a
+# THIS ALTERNATION IS NOT EVIDENCE OF ANYTHING. It says a
 # security WORD is present. It says nothing about what that word is APPLIED TO,
 # so "security checklist, <live attack>" matches it exactly as well as a real
 # checklist does, at every position, for every word in the list — the same
-# shape the documentary-prose cap avoids by construction and the FINDING-13
-# guard keeps out of the descriptive dampener. The evidence lives in
-# ``artifact_reports_danger`` below and in the caller's topic/command test; this
-# regex is only the trigger that says "consider the artifact arm at all".
+# shape the documentary-prose cap avoids by construction and the
+# descriptive-frame residue guard keeps out of the descriptive dampener. The
+# evidence lives in ``artifact_reports_danger`` below and in the caller's
+# topic/command test; this regex is only the trigger that says "consider the
+# security-artifact arm at all".
 _SECURITY_ARTIFACT = re.compile(
     r"\b(?:security\s+checklist|checklist|test\s+fixture|unit\s+tests?|"
     r"log\s+(?:line|entry|message)|logline|secrets?\s+manager|leakage)\b",
@@ -466,7 +467,7 @@ _DOCUMENTARY_FRAME = re.compile(
 )
 
 
-# ── DESCRIPTIVE-FRAME RESIDUE GUARD (FINDING-13) ─────────────────────────────
+# ── DESCRIPTIVE-FRAME RESIDUE GUARD ──────────────────────────────────────────
 # The documentary-prose cap above is SAFE because it is two-sided: the danger must
 # sit INSIDE a quoted span, and the residue with every quoted span removed must be
 # clean. The DESCRIPTIVE dampener (`is_descriptive`, branches 2 and 3) has no such
@@ -658,7 +659,7 @@ def descriptive_frame_residues(text: str) -> list[str]:
 
 
 def security_artifact_residues(text: str) -> list[str]:
-    """Residue family for the SECURITY-ARTIFACT vocabulary (FINDING-14's arm).
+    """Residue family for the vocabulary of the security-artifact arm.
 
     Every branch of ``_SECURITY_ARTIFACT`` is a complete noun phrase, so member 0
     already strips it whole and the extra members are usually duplicates that
@@ -686,12 +687,12 @@ def span_is_predicate(matched: str) -> bool:
 def descriptive_frame(text: str) -> str | None:
     """Which branch of ``is_descriptive`` licenses dampening, or None.
 
-    Split out from ``is_descriptive`` so the caller can apply the FINDING-13
-    residue guard to the DESCRIPTIVE and INTERROGATIVE branches (whole-text regex
-    cues, no structural guard of their own) while leaving the PROTECTIVE branch
-    outside that guard — it carries its own two structural anti-bypass vetoes
-    (``_active_extraction`` and ``_extraction_defeats_protection``) and its own
-    regression corpus.
+    Split out from ``is_descriptive`` so the caller can apply the
+    descriptive-frame residue guard to the DESCRIPTIVE and INTERROGATIVE branches
+    (whole-text regex cues, no structural guard of their own) while leaving the
+    PROTECTIVE branch outside that guard — it carries its own two structural
+    anti-bypass vetoes (``_active_extraction`` and
+    ``_extraction_defeats_protection``) and its own regression corpus.
 
     Returns "protective", "descriptive", "interrogative", or None. Never raises.
     """
@@ -756,20 +757,22 @@ def documentary_mention(text: str) -> bool:
     return bool(_DOCUMENTARY_FRAME.search(strip_code_spans(text)))
 
 
-# ── SECURITY-ARTIFACT REPORT (FINDING-14) ────────────────────────────────────
+# ── SECURITY-ARTIFACT REPORT ─────────────────────────────────────────────────
 # One rule across all three dampeners: a dampener must check what its FRAME is
 # APPLIED TO, never merely that the frame is present:
 #
 #   documentary-prose cap  danger inside a quoted span, frame outside it,
 #                          residue clean.
-#   descriptive dampener   FINDING-13 — a whole-text cue regex, guarded by
-#                          asking what the TEXT produced (block-band danger + a
-#                          predicate span), never what the cue was.
-#   _SECURITY_ARTIFACT     this. A bare keyword list with no quotation
-#                          requirement and no residue guard would let
-#                          "security checklist" / "unit tests" / "see the log
-#                          line" / "leakage", appended to a canonical attack at
-#                          any position, cap it into the flag band.
+#   descriptive dampener   a whole-text cue regex, guarded by the
+#                          descriptive-frame residue guard: it asks what the
+#                          TEXT produced (block-band danger + a predicate
+#                          span), never what the cue was.
+#   _SECURITY_ARTIFACT     this, the security-artifact arm. A bare keyword
+#                          list with no quotation requirement and no residue
+#                          guard would let "security checklist" / "unit tests"
+#                          / "see the log line" / "leakage", appended to a
+#                          canonical attack at any position, cap it into the
+#                          flag band.
 #
 # The sibling arm ``_QUOTED_ATTACK`` carries the requirement directly: the
 # override/extraction keyword must sit INSIDE two quote marks, so a bare live
@@ -928,10 +931,10 @@ def security_mention(text: str) -> bool:
     """True when a benign-security MENTION FRAME is present: the text quotes an
     attack, or carries a security-artifact word.
 
-    NOT a licence to dampen anything, and not what the scanner calls
-    (FINDING-14). The quoted arm carries its own evidence — the payload is inside
-    quote marks. The artifact arm carries none: it is a bare word list, and a
-    word list that fires on "security checklist, <live attack>" is a trigger, not
+    NOT a licence to dampen anything, and not what the scanner calls. The
+    quoted arm carries its own evidence — the payload is inside quote marks.
+    The security-artifact arm carries none: it is a bare word list, and a word
+    list that fires on "security checklist, <live attack>" is a trigger, not
     evidence. The scanner therefore consults ``has_quoted_attack`` and
     ``security_artifact_cue`` separately and requires the artifact arm to EARN
     the cap (see LocalScanner._mention_frame_is_earned). Kept as the union

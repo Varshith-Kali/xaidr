@@ -2,8 +2,8 @@
 
 WHY ONE OBJECT AND NOT FIFTEEN CALLABLES. Behaviour an extension adds has to
 attach somewhere. Fifteen separate ``on_x=`` constructor kwargs would be fifteen
-independently-validated, independently-documented surfaces, and the ADV-2
-failure class says what happens to a security control handed something it does
+independently-validated, independently-documented surfaces, and the
+loud-validation rule says what happens to a security control handed something it does
 not understand: it is ignored, quietly, and the deployment believes it is
 protected. So there is one object, it is validated by ``isinstance`` at
 construction, and a bad one raises.

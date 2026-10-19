@@ -75,7 +75,7 @@ _MATCH_FIELDS = {
 # fnmatch over strings. A tier put there would be compared as a glob pattern —
 # `"4"` would match the string `"4"` and nothing else, so `> 1` semantics would
 # be quietly unavailable while the rule still loaded and appeared to work.
-# Living under `conditions:` also means it inherits the ADV-2 unknown-key
+# Living under `conditions:` also means it inherits the unknown-key
 # validator, so `min_chain_tier_abov` is rejected at load instead of disarming
 # the rule in silence.
 _CONDITION_FIELDS = frozenset({"trust_below", "min_chain_tier_above"})
@@ -160,10 +160,11 @@ def _reject_unknown_keys(
     return None
 
 
-# ── F5 · type validation ─────────────────────────────────────────────────────
+# ── type validation ──────────────────────────────────────────────────────────
 #
-# A-11 (above) rejects the case where a match/conditions KEY is wrong. F5 is the
-# same failure with the key right and the VALUE the wrong shape:
+# The unknown-key validator above rejects the case where a match/conditions
+# KEY is wrong. Type validation covers the same failure with the key right and
+# the VALUE the wrong shape:
 #
 #     match:
 #       tools: deploy        # not ["deploy"]
@@ -349,7 +350,7 @@ def explain_action_policy(
     (``match:``, ``conditions:``, ``defaults:``) is rejected for the same
     reason, as is a non-finite numeric condition.
 
-    Wrong-TYPED values are rejected on the same grounds (F5): a scalar where a
+    Wrong-TYPED values are rejected on the same grounds: a scalar where a
     list belongs, a non-mapping ``match:``/``conditions:``/``defaults:`` block,
     an empty pattern list, or a non-numeric numeric condition all load cleanly
     and then never fire. The invariant this function enforces is:
@@ -496,9 +497,10 @@ def explain_action_policy(
             )
             if hit:
                 return _refused("unknown_key", f"{at}.conditions.{hit[0]}")
-            # F5 · the keys are right; check the VALUES can actually be matched
-            # against. Ordered after the key checks so a typo'd key keeps its
-            # did-you-mean message instead of being reported as a bad type.
+            # Type validation · the keys are right; check the VALUES can
+            # actually be matched against. Ordered after the key checks so a
+            # typo'd key keeps its did-you-mean message instead of being
+            # reported as a bad type.
             for field, value in sorted(match.items(), key=lambda kv: str(kv[0])):
                 if _reject_match_value(r.get("id"), field, value):
                     return _refused("invalid_match_value", f"{at}.match.{field}")
@@ -720,7 +722,7 @@ def _rule_matches(rule: dict, request: dict, evaluators: Optional[Mapping[str, A
     # widening above.
     # BUILT-IN condition names keep built-in semantics even when an extension
     # also registers them. `trust_below` is the case that matters: an extension
-    # registers the name to lift A-11's parse-time rejection and supplies the
+    # registers the name to lift the parse-time rejection and supplies the
     # SCORE through S9's subject_trust; the comparison stays here. Registration
     # means "I provide the input", not "I replace the comparison".
     handled = ("trust_below", "min_chain_tier_above")

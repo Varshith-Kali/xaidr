@@ -526,7 +526,7 @@ class DelphiSensor:
         # before the option existed.
         #
         # Validated LOUDLY and immediately after `enforcement_mode`, for the
-        # same ADV-2 reason: a misspelled group that quietly did nothing would
+        # same loud-validation reason: a misspelled group that quietly did nothing would
         # leave a deployment believing it has a posture it does not have, which
         # is the exact failure this option exists to remove.
         self._fail_closed = _resolve_fail_closed(fail_closed)
@@ -548,7 +548,7 @@ class DelphiSensor:
         # which carries CLAIMS about upstream hops and cannot speak for this
         # sensor.
         #
-        # Validated LOUDLY per the ADV-2 precedent set by enforcement_mode above:
+        # Validated LOUDLY, the way enforcement_mode above is validated:
         # a security control handed a value it does not understand fails at
         # construction rather than defaulting quietly and then enforcing
         # something other than what the deployer wrote.
@@ -601,7 +601,7 @@ class DelphiSensor:
         # hook that OBSERVES runs on a finished object.
         #
         # Validated the way circuit_breaker above is validated, and for the same
-        # reason (ADV-2): a security control handed something it does not
+        # reason: a security control handed something it does not
         # understand must fail at construction, not default to inert.
         #
         # `extensions` is normalised to a tuple so a caller that keeps and
@@ -1081,7 +1081,7 @@ class DelphiSensor:
 
         Returns None on a bare sensor, which is the whole point: open computes
         no per-agent trust, which is exactly why `trust_below` is rejected at
-        policy-parse time (A-11). This method is what an extension package
+        policy-parse time. This method is what an extension package
         replaces to make that condition meaningful, and S2 is what lets it
         register the condition NAME alongside.
         """
@@ -1137,7 +1137,7 @@ class DelphiSensor:
         """Merge every extension's `policy_conditions()` into one map.
 
         A DUPLICATE key across two extensions RAISES at construction rather than
-        letting one win. Silent last-write-wins is the ADV-2 shape: two packages
+        letting one win. Silent last-write-wins is the quietly-inert shape: two packages
         both believe they own `trust_below`, one is quietly inert, and the
         deployment cannot tell which. The message names both extensions and the
         key so the collision is actionable without reading either package.
@@ -2459,8 +2459,8 @@ class DelphiSensor:
                 # form through the SAME classifier, so a `$IFS`/literal-variable
                 # spelling is the same fact as its plain form. A command
                 # substitution or an unresolved variable is DETECTED, never
-                # executed (D5): its verdict comes from `canonical.findings`
-                # below, following the D1/D5 table. Additive, so this can only
+                # executed: its verdict comes from `canonical.findings`
+                # below, following the unresolved-construct verdict table. Additive, so this can only
                 # raise a verdict; keyed by language so SQL and URL reuse the seam.
                 canonical = _canonicalize(shell_command, "shell")
                 if canonical.text and canonical.text != shell_command:
@@ -2723,7 +2723,7 @@ class DelphiSensor:
                 self._policy,
                 agent_id=self.agent_id,
                 # S9: None on a bare sensor (open computes no per-agent trust,
-                # which is why A-11 rejects `trust_below` at parse time). An
+                # which is why the policy parser rejects `trust_below`). An
                 # extension that supplies one is what makes that condition real.
                 trust=self._subject_trust(self.agent_id),
                 tool_name=tool_name,

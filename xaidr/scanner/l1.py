@@ -31,7 +31,7 @@ _DETECTORS = {
 # tool-argument threats BY CATEGORY, so a rule whose `category` is misspelled
 # ("jailbrake", "sytem_prompt_leak") loads cleanly, fires on the content path,
 # and is then SILENTLY DISCARDED on the tool path — a rule half-disabled by a
-# typo, exactly the failure class the ADV-2 policy-key validator exists to stop.
+# typo, exactly the failure class the policy-key validator exists to stop.
 # So an unrecognized category is rejected LOUDLY at load, not defaulted quietly.
 #
 # Deliberately an EXPLICIT allowlist, not `{r["category"] for r in rules}`: a set
@@ -109,7 +109,7 @@ class UnknownRuleCategory(ValueError):
     a bad category is invisible at runtime: the rule still fires on the content
     path but is dropped by the tool-path category filter, so the operator sees a
     working rule that is in fact disarmed on one surface. Fail loudly at ship
-    time (CI imports the package) instead. Mirrors the ADV-2 precedent for
+    time (CI imports the package) instead. Mirrors the loud-validation rule for
     unknown policy keys (authz/policy.py) and unknown enforcement modes (sensor).
     """
 
@@ -325,7 +325,7 @@ def _load_and_compile(filename: str) -> list:
         # caught by it: a misspelled category is an authoring bug in a vendored
         # rule that must fail the build, not a corrupt-asset condition to degrade
         # around. A did-you-mean names the offending rule and category, matching
-        # the ADV-2 unknown-key message shape in authz/policy.py.
+        # the unknown-key message shape in authz/policy.py.
         category = r.get("category")
         if category not in _KNOWN_L1_CATEGORIES:
             near = difflib.get_close_matches(

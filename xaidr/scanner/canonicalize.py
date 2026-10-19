@@ -8,17 +8,17 @@ looking at two different commands. This stage closes that distance for the
 deterministic, non-executing rewrites, so the classifier that already exists
 judges the form the runtime would actually run.
 
-KEYED BY LANGUAGE (D3). The public entry is ``canonicalize(text, language)``.
-Two are implemented: ``shell`` (D4), for a command the classifier judges, and
+KEYED BY LANGUAGE. The public entry is ``canonicalize(text, language)``.
+Two are implemented: ``shell``, for a command the classifier judges, and
 ``string``, for an argument value the DLP secret scan reads. SQL and URL plug in
 the same way, by registering a normalizer in ``_NORMALIZERS`` — the sensor seam
 and the ``Canonical`` contract do not change when they do.
 
-WHAT IT MUST NEVER DO (D5). It never executes anything. A command substitution
+WHAT IT MUST NEVER DO. It never executes anything. A command substitution
 or a backtick is DETECTED and left in place; it is never run to discover what it
 expands to. A value that cannot be resolved statically is reported as
-unresolved, with a verdict that follows Ani's D1/D5 table, never a guess at the
-value.
+unresolved, with a verdict from the unresolved-construct verdict table, never a
+guess at the value.
 
 Guarantees, because this sits on a scan path:
 
@@ -46,7 +46,7 @@ from .command_parse import parse_command, _normalize_name
 _MAX_INPUT_CHARS = 16_384
 
 # A finding category that is FLAG-tier in the sensor (never blocks on its own).
-# Used for the unresolvable constructs the D1/D5 table says to flag, not block.
+# Used for the unresolvable constructs the verdict table says to flag, not block.
 _FLAG_CATEGORY = "shell_unresolved"
 # A finding category that is BLOCK-tier in the sensor.
 _BLOCK_CATEGORY = "code_execution"
@@ -67,7 +67,7 @@ class Canonical:
             text was returned unchanged.
         findings: Verdicts for unresolvable constructs, as
             ``[{"rule", "category", "score"}, …]``. ``category`` is flag-tier
-            (surface) or block-tier (enforce) per the D1/D5 table. Empty when
+            (surface) or block-tier (enforce) per the verdict table. Empty when
             nothing was unresolvable.
     """
 
@@ -208,7 +208,7 @@ def _ifs_reassigned_verdict(text: str) -> List[Dict[str, object]]:
 
 def _unresolved_construct_verdict(text: str) -> List[Dict[str, object]]:
     """Verdicts for command substitution / backticks and unresolved variables,
-    following the D1/D5 table. Reads the parse; never executes anything."""
+    following the verdict table. Reads the parse; never executes anything."""
     findings: List[Dict[str, object]] = []
     try:
         segments = parse_command(text)
@@ -319,7 +319,7 @@ def _finding(rule: str, category: str, score: float) -> Dict[str, object]:
 # `||` (or plain juxtaposition), and base64 runs decoded to the text they
 # encode. The canonical text is handed to the DLP secret scan, so a credential
 # is matched on its value however the argument spells it. Pure string handling:
-# nothing is evaluated, imported or run (D5).
+# nothing is evaluated, imported or run.
 
 # A single- or double-quoted literal on one line, no escapes. The body is
 # bounded so one long line cannot make the chain walk quadratic.

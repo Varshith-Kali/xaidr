@@ -230,7 +230,7 @@ DLP_PATTERNS = [
     },
     {
         # Live secret keys only. Test-mode keys are DLP_stripe_test_key, which
-        # signals and does not block (ruling D3/F5).
+        # signals and does not block.
         "id": "OUT_secret_stripe",
         "pattern": re.compile(r"\bsk_live_[A-Za-z0-9]{24,}\b", re.IGNORECASE),
         "category": "secret_api_key",
@@ -268,7 +268,7 @@ DLP_PATTERNS = [
     # See SIGNAL_ONLY_SECRET_RULES below. Scored in the flag band, under the
     # default block threshold, so output does not block them either.
     {
-        # Ruling D3/F5: a Stripe test-mode key is an issued credential, but a
+        # A Stripe test-mode key is an issued credential, but a
         # tool call writing one to a local .env is ordinary development, and
         # this path cannot yet tell a local write from an outbound one.
         "id": "DLP_stripe_test_key",
@@ -279,7 +279,7 @@ DLP_PATTERNS = [
         "signal_only": True,
     },
     {
-        # Ruling D3/F2: a quoted 20+ character value under a key name that
+        # A quoted 20+ character value under a key name that
         # DLP_api_key does not list (`slack_api_token = "…"`, `client_secret =
         # "…"`). `token = …` is ordinary config, so a wider name list is a
         # signal and not a block.
@@ -360,10 +360,10 @@ HIGH_CONFIDENCE_SECRET_CATEGORIES = frozenset({
 LOW_CONFIDENCE_SECRET_CATEGORIES = frozenset({"secret_password"})
 
 # SIGNAL-ONLY entries: a shape whose category is high-confidence but whose
-# enforcement was ruled down to a signal (D3, 2026-10-18). On the tool-call path
+# enforcement is set to signal-only. On the tool-call path
 # a hit is recorded (rule id, score, `flagged`) and never blocks. This is a
 # per-ENTRY decision because the reason is not the shape's confidence: a Stripe
-# test key is unmistakable, and is ruled a signal because of where it is going.
+# test key is unmistakable, and is signal-only because of where it is going.
 SIGNAL_ONLY_SECRET_RULES = frozenset(
     p["id"] for p in DLP_PATTERNS if p.get("signal_only")
 )

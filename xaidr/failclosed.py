@@ -16,7 +16,7 @@ partition that makes each group independently safe to enable:
     the sensor cannot support; it would also convert a packaging defect into a
     customer-found outage, at a moment when the operator has no signal saying
     which file is broken. Raising at construction puts the fault in a deploy
-    log, once, with the asset named. That is the same ADV-2 posture seven
+    log, once, with the asset named. That is the same loud-validation posture seven
     constructor arguments already take (``enforcement_mode``,
     ``privilege_tier``, ``circuit_breaker``, ``extensions``, the nano artifact
     hash, a duplicate policy-condition key, ``a2a_structural_enforcement``).
@@ -179,7 +179,7 @@ def resolve(fail_closed) -> FailClosedConfig:
     * a mapping of group name to verdict — for a deployment that already routes
       ``approval_required`` to a human
 
-    LOUD VALIDATION, per ADV-2: a security control handed a value it does not
+    LOUD VALIDATION: a security control handed a value it does not
     understand must fail at construction rather than defaulting to inert. A
     misspelled ``fail_closed=("bonuds",)`` that quietly did nothing would leave
     a deployment believing it had a posture it does not have, which is exactly
