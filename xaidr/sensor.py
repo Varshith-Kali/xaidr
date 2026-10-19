@@ -23,6 +23,7 @@ from uuid import uuid4
 from . import local_policy as _policy
 from . import provenance as _prov
 from . import provenance_chain as _chain
+from . import run_tree as _run_tree
 from .authz import classify
 from .authz.classifier import (
     SHELL_ARG_KEYS as _SHELL_ARG_KEYS,
@@ -866,6 +867,19 @@ class DelphiSensor:
         if "controls" in self._fail_closed:
             raise _FailClosedError("controls", detail)
 
+    def _enqueue_event(self, event: dict) -> None:
+        """Every telemetry event this sensor emits passes here, once.
+
+        The one place an event's ``data`` gains keys that describe where it
+        was emitted rather than what was scanned: the run-tree keys
+        (``xaidr.run_tree``). That stamp never raises and only adds keys, so
+        the event and its verdict reach the reporter exactly as built.
+        """
+        data = event.get("data") if isinstance(event, dict) else None
+        if isinstance(data, dict):
+            _run_tree.stamp(data)
+        self._telemetry.enqueue(event)
+
     def _emit_fail_closed(
         self, direction: str, group: str, detail: str, prompt=None, **extra
     ) -> ScanResult:
@@ -927,7 +941,7 @@ class DelphiSensor:
                 "failClosedDetail": detail,
             }
             data.update(extra)
-            self._telemetry.enqueue(
+            self._enqueue_event(
                 {"type": "scan", "agentId": self.agent_id, "data": data}
             )
         except Exception:
@@ -1262,7 +1276,7 @@ class DelphiSensor:
                 "enforcementMode": self.enforcement_mode,
                 **event,
             }
-            self._telemetry.enqueue({
+            self._enqueue_event({
                 "type": "circuit_breaker",
                 "agentId": self.agent_id,
                 "data": data,
@@ -1329,7 +1343,7 @@ class DelphiSensor:
                 "promptHash": None,
             }
             data.update(extra)
-            self._telemetry.enqueue({
+            self._enqueue_event({
                 "type": "scan",
                 "agentId": self.agent_id,
                 "data": data,
@@ -1367,7 +1381,7 @@ class DelphiSensor:
                 "gate": gate_name,
             }
             data.update(extra)
-            self._telemetry.enqueue({
+            self._enqueue_event({
                 "type": "scan",
                 "agentId": self.agent_id,
                 "data": data,
@@ -1659,7 +1673,7 @@ class DelphiSensor:
             "promptHash": None,
         }
         data.update(extra)
-        self._telemetry.enqueue({
+        self._enqueue_event({
             "type": "scan",
             "agentId": self.agent_id,
             "data": data,
@@ -1738,7 +1752,7 @@ class DelphiSensor:
                 "errorType": type(exc).__name__,
             }
             data.update(extra)
-            self._telemetry.enqueue(
+            self._enqueue_event(
                 {"type": "scan", "agentId": self.agent_id, "data": data}
             )
         except Exception:
@@ -1902,7 +1916,7 @@ class DelphiSensor:
                     data["nanoFpApplies"] = f"{applies[0]}/{applies[1]}"
             except Exception:
                 pass
-        self._telemetry.enqueue({
+        self._enqueue_event({
             "type": "scan",
             "agentId": self.agent_id,
             "data": data,
@@ -2133,7 +2147,7 @@ class DelphiSensor:
             data["provenance"] = prov
         if parent_context is not None:
             data["traceParent"] = parent_context.as_metadata()
-        self._telemetry.enqueue({
+        self._enqueue_event({
             "type": "scan",
             "agentId": self.agent_id,
             "data": data,
@@ -2766,7 +2780,7 @@ class DelphiSensor:
         }
         if prov:
             data["provenance"] = prov
-        self._telemetry.enqueue({
+        self._enqueue_event({
             "type": "scan",
             "agentId": self.agent_id,
             "data": data,
@@ -3844,7 +3858,7 @@ class ProtectedHttpClient:
             prov = _resolve_provenance(self._sensor.agent_id)
             if prov:
                 data["provenance"] = prov
-            self._sensor._telemetry.enqueue({
+            self._sensor._enqueue_event({
                 "type": "scan",
                 "agentId": self._sensor.agent_id,
                 "data": data,
