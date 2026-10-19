@@ -84,9 +84,10 @@ pins the pair by id so a third cannot be gained quietly.
 
 ### A third pool, for the one field the other two cannot reach
 
-`sql_dml.jsonl`, 50 benign `DELETE`/`UPDATE` statements, added with the F2
-predicate rewrite. It is separate for the same reason `discriminator.jsonl` is,
-and the blindness it answers is sharper than either of the two above.
+`sql_dml.jsonl`, 50 benign `DELETE`/`UPDATE` statements for the SQL
+predicate-boundedness rules. It is separate for the same reason
+`discriminator.jsonl` is, and the blindness it answers is sharper than either of
+the two above.
 
 `sql.unbounded_mutation` and `sql.tautological_mutation` match only
 `statement ∈ {delete, update}`. **Neither of the other two pools contains a
@@ -117,7 +118,7 @@ between the two `$` as one dollar-quoted string puts the `WHERE` clause inside a
 literal, and the write reports `predicate=none` — an unbounded mutation. The same
 swallow hides a following `;` and every statement after it.
 
-### A fourth pool, for the axis the other three share: the DOMAIN (audit F7)
+### A fourth pool, for the axis the other three share: the DOMAIN
 
 `domains.jsonl`, 120 benign tool calls from six domains no detector here was
 built against — legal document management, game state, scientific computing and

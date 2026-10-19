@@ -35,11 +35,11 @@ keep that readable: the detector is not aimed at the other 34 and does not fire
 on them. A denominator that quietly became "the ones we expected to fire" would
 turn a 14/48 reach claim into a 14/14 tautology.
 
-UNAFFECTED BY THE F9 RELABELLING, and this script is how that is checkable
-rather than assertable. F9 moved 28 cases between categories without editing any
-`tool` or `args`, so a whole-battery step count over all categories cannot move.
-The per-category breakdown below shows the labels; the total does not depend on
-them.
+UNAFFECTED BY THE OWASP RELABELLING, and this script is how that is checkable
+rather than assertable. The relabelling moved 28 cases between categories
+without editing any `tool` or `args`, so a whole-battery step count over all
+categories cannot move. The per-category breakdown below shows the labels; the
+total does not depend on them.
 
 Standard library + `xaidr`. No sensor is built, no policy is bound, no network.
 """

@@ -153,7 +153,7 @@ broken, only a wall of blocks. And it is dishonest: a `blocked` verdict asserts
 whatever about the content. **Any grouping that put rule-asset loading into a
 traffic-verdict group is wrong and I would reject it.**
 
-G1 is also the ADV-2 posture the codebase already uses everywhere else in the
+G1 is also the loud-validation posture the codebase already uses everywhere else in the
 constructor — `enforcement_mode` (`enforcement.py:resolve`), `privilege_tier`
 (`sensor.py:487`), `circuit_breaker` (`652`), `extensions` (`541`), the nano
 artifact hash (`nano.py:745`), a duplicate policy-condition key (`784`). A

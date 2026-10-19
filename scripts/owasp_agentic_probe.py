@@ -410,8 +410,8 @@ CATEGORIES = [
     {
         "id": "ASI04",
         "name": "Agentic Supply Chain",
-        # Held-out: 0 of 3. The battery had NO real ASI04 cases until finding F9
-        # relabelled it -- the twelve that used to carry this id tested resource
+        # Held-out: 0 of 3. The battery had NO real ASI04 cases until the OWASP
+        # relabelling -- the twelve that used to carry this id tested resource
         # exhaustion and now read `EXH`. Three cases is not a measurement, and
         # this verdict rests on the structural argument in the probes below, not
         # on that ratio. See asi_battery/RESULTS.md.
@@ -675,7 +675,7 @@ CATEGORIES = [
         "name": "Human-Agent Trust Exploitation",
         # Held-out: ONE case (an output claiming a two-person review was
         # satisfied when it was not), and it is missed. The twelve that used to
-        # carry this id tested retrieval poisoning and are now ASI06 (F9). One
+        # carry this id tested retrieval poisoning and are now ASI06. One
         # case is not a rate; this verdict is the in-sample probes' reading.
         "verdict": "PARTIAL",
         "audit_1_2_1": "PARTIAL",
@@ -808,7 +808,7 @@ def main():
             print("=" * 118)
             print(f"{cat['id']}  {cat['name']}   ->   {cat['verdict']}")
             if cat["verdict"] != cat["audit_1_2_1"]:
-                print(f"      (earlier hand-written audit said: {cat['audit_1_2_1']})")
+                print(f"      (earlier hand-written mapping said: {cat['audit_1_2_1']})")
             print("=" * 118)
         mark = "  " if ok else "!!"
         rule_text = ", ".join(rules[:3]) or "-"

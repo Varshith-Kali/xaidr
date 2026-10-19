@@ -496,7 +496,7 @@ def test_sql_differential_is_not_vacuous():
 #: shrink rather than rot.
 @pytest.mark.xfail(strict=True, reason=(
     "column-referencing always-true predicates need evaluation, not parsing; "
-    "named residual of the F2 fix"))
+    "a named residual of the closed lexical predicate test"))
 @pytest.mark.parametrize("pred", [
     "id IS NOT NULL OR id IS NULL",
     "id > -1",

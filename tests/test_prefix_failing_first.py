@@ -1,4 +1,4 @@
-"""Failing-first checks for the F2-F9 invariants, using the public surface only.
+"""Failing-first checks for the invariants below, using the public surface only.
 
 WHY THIS FILE EXISTS SEPARATELY FROM tests/test_audit_sep05_bypasses.py AND
 tests/test_audit_f8_reporter_redaction.py / tests/test_audit_f9_tool_telemetry.py.
@@ -20,15 +20,15 @@ Every test in this file therefore imports ONLY the long-standing public surface
 (Sensor, begin_flow, clear_flow, extract_context, inject_context), and asserts
 the CONSEQUENCE rather than the mechanism:
 
-    F2   positional and keyword calls get one verdict  (a canary list records
+    -    positional and keyword calls get one verdict  (a canary list records
                                                         whether the tool ran)
-    F3   a dangerous later argument is examined         (the tool never runs)
-    F4   the verdict follows the rows a statement removes
+    -    a dangerous later argument is examined         (the tool never runs)
+    -    the verdict follows the rows a statement removes
                                                         (a real SQLite table)
-    F6   a delegated action never reads as local
-    caps a padded statement that deletes every row is still gated
-    F8   the credential appears zero times in the log  (a count)
-    F9   three different commands produce three hashes (no collision)
+    -    a delegated action never reads as local
+    -    a padded statement that deletes every row is still gated
+    -    the credential appears zero times in the log  (a count)
+    -    three different commands produce three hashes (no collision)
 
 On any tree where one of these invariants does not hold, its check goes red with
 a message that names what an operator would lose; where it holds, the check is
@@ -92,7 +92,7 @@ def _clean_flow():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F2 -- positional and keyword calls get the same policy verdict
+# positional and keyword calls get the same policy verdict
 # ══════════════════════════════════════════════════════════════════════════
 
 TERRAFORM = "terraform destroy -auto-approve"
@@ -127,7 +127,7 @@ def test_f2_a_positional_call_does_not_execute_what_a_keyword_call_refuses():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F3 -- every SQL/URL-shaped argument is examined, not only the first
+# every SQL/URL-shaped argument is examined, not only the first
 # ══════════════════════════════════════════════════════════════════════════
 
 SQL_TAUTOLOGY = "DELETE FROM records WHERE 1=1"
@@ -185,7 +185,7 @@ def test_f3_ordinary_multi_argument_calls_still_run():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F4 -- SQL predicates are read, not string-matched, in BOTH directions
+# SQL predicates are read, not string-matched, in BOTH directions
 # ══════════════════════════════════════════════════════════════════════════
 
 def _rows_left(statement: str) -> int:
@@ -291,7 +291,7 @@ def test_caps_a_value_past_the_candidate_walk_cannot_hide():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F6 -- lost provenance never makes a delegated action read as local
+# lost provenance never makes a delegated action read as local
 # ══════════════════════════════════════════════════════════════════════════
 
 TIER_POLICY = _policy({"tools": ["deploy_prod"]}, "require_approval",
@@ -343,7 +343,7 @@ def test_f6_stripping_provenance_never_weakens_the_verdict(strip):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F8 -- a credential in a reporter destination never reaches the logs
+# a credential in a reporter destination never reaches the logs
 # ══════════════════════════════════════════════════════════════════════════
 
 CANARY = "s3cr3t-CANARY-token-9f2a"
@@ -424,7 +424,7 @@ def test_f8_the_destination_is_still_named():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F9 -- tool telemetry reports only content and cost it has measured
+# tool telemetry reports only content and cost it has measured
 # ══════════════════════════════════════════════════════════════════════════
 
 def _tool_event(tool="run_command", arguments=None):
@@ -485,7 +485,7 @@ def test_f9_scan_time_is_measured_not_zero():
 
 
 def test_f9_the_openA2A_mapping_carries_the_privilege_tier_fields():
-    """The third half of F9: the decision is carried and its reason must be too."""
+    """Telemetry's third half: the decision is carried and its reason must be too."""
     from xaidr.schema import to_openA2A
 
     cap = _Capture()

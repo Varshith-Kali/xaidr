@@ -62,7 +62,7 @@ def test_single_quoted_use_is_not_substituted():
     assert "'$x'" in c.text
 
 
-# ── unresolvable constructs: D1/D5 verdicts ──────────────────────────────────
+# ── unresolvable constructs: verdict-table verdicts ──────────────────────────
 
 def test_ifs_reassigned_is_out_of_scope_and_not_expanded():
     c = canonicalize("IFS=,; x=rm,-rf,/etc; $x", "shell")

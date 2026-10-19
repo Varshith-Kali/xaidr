@@ -1,6 +1,6 @@
 """Nothing may cite a battery case id that no longer exists, unframed.
 
-THE DEFECT. Relabelling the held-out battery (finding F9) moved 28 cases to a
+THE DEFECT. Relabelling the held-out battery moved 28 cases to a
 new category, and their ids moved with them (`ASI04-A01..A12` ->
 `EXH-A01..A12`, `ASI09-A01..A12` -> `ASI06-A13..A24`, and four more). Nothing
 was rewritten — same tool, same args, label only.
@@ -247,7 +247,7 @@ def test_no_unframed_citation_of_a_case_id_that_no_longer_exists(
         "nothing marking them as historical — so each reads as a live claim "
         "about a case that cannot be looked up:\n"
         + "\n".join(sorted(bad))
-        + "\n\nThe relabelling for finding F9 moved 28 cases (see "
+        + "\n\nThe battery relabelling moved 28 cases (see "
           "asi_battery/README.md 'Case-id map'). Either update the id, or "
           "frame the mention as a "
           "record of the rename the way that map does."

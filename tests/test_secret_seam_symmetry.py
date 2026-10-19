@@ -70,7 +70,7 @@ GENERATORS = {
                                         f"{_r(g, string.ascii_lowercase, 8)}:{_r(g, ALNUM, 16)}"
                                         f"@db-{_r(g, string.ascii_lowercase, 6)}.internal:5432/app"),
     "DLP_jwt": lambda g: f"eyJ{_r(g, B64U, 30)}.eyJ{_r(g, B64U, 60)}.{_r(g, B64U, 43)}",
-    # ── moved from output-l1-rules.json, ids kept (D1) ──
+    # ── moved from output-l1-rules.json, ids kept ──
     "OUT_secret_openai_key": lambda g: _pick(
         g,
         lambda g: "sk-" + _r(g, ALNUM, 48),
@@ -90,7 +90,7 @@ GENERATORS = {
     "DLP_stripe_restricted_key": lambda g: "rk_live_" + _r(g, ALNUM, 99),
     "DLP_huggingface_token": lambda g: "hf_" + _r(g, string.ascii_letters, 34),
     "DLP_npm_token": lambda g: "npm_" + _r(g, ALNUM, 36),
-    # ── signal-only (D3: F5, F2) ──
+    # ── signal-only ──
     "DLP_stripe_test_key": lambda g: g.choice(["sk_test_", "rk_test_"]) + _r(g, ALNUM, 99),
     "DLP_token_assignment": lambda g: (f'{g.choice(["slack_api_token", "refresh_token", "client_secret"])}'
                                        f' = "{_r(g, ALNUM, 32)}"'),
@@ -229,8 +229,8 @@ def test_enforcing_shape_blocks_on_both_seams(block, rule_id):
 # The signal-only entries are a RULING, not a property of the table: each one is
 # named here with the ruling that made it, and the table must agree exactly.
 SIGNAL_RULED = {
-    "DLP_stripe_test_key": "D3 F5 (2026-10-18): a test-mode key is recorded, not halted",
-    "DLP_token_assignment": "D3 F2 (2026-10-18): a key name DLP_api_key lacks is a signal",
+    "DLP_stripe_test_key": "a test-mode key is recorded, not halted",
+    "DLP_token_assignment": "a key name DLP_api_key lacks is a signal",
 }
 
 

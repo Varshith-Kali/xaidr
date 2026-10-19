@@ -11,7 +11,7 @@ Two failure classes this suite pins:
 
 2. A rule whose `category` is misspelled loads cleanly, fires on the content
    path, and is dropped on the tool path — half-disabled by a typo. It must be
-   rejected LOUDLY at load with a did-you-mean (ADV-2 precedent).
+   rejected LOUDLY at load with a did-you-mean (the loud-validation rule).
 """
 
 from __future__ import annotations
@@ -213,7 +213,7 @@ def test_unknown_category_raises_at_load():
     msg = str(exc.value)
     assert "T_probe" in msg                 # names the offending rule
     assert "jailbrake" in msg               # names the offending category
-    assert "Did you mean 'jailbreak'?" in msg   # did-you-mean, ADV-2 shape
+    assert "Did you mean 'jailbreak'?" in msg   # did-you-mean, loud-validation shape
 
 
 def test_known_category_loads_clean():

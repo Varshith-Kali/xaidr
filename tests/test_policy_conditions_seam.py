@@ -87,7 +87,7 @@ def test_builtin_condition_fields_still_parse_with_extensions_registered():
 
 @pytest.mark.parametrize("placement", ["conditions", "match"])
 def test_trust_below_still_rejected_with_no_extensions(placement):
-    """A-11 restated for S2. The existing A-11 tests in
+    """The trust_below rejection, restated for S2. The existing tests in
     test_inert_stubs_audit.py are left untouched; this one pins the same
     behaviour through the new code path."""
     doc = _policy({"trust_below": 0.5}) if placement == "conditions" else {

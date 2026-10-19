@@ -14,10 +14,10 @@ rather than a reading of a regex. That checks false positives as well as
 misses: DELETE FROM records WHERE note='1=1' removes zero rows, so it must not
 be gated as a tautological mutation.
 
-  F2  positional and keyword calls are gated identically by a structural policy
-  F3  every SQL/URL argument is checked, not only the first
-  F4  SQL is read lexically soundly in both directions
-  F6  lost provenance never makes a delegated action look local
+  * positional and keyword calls are gated identically by a structural policy
+  * every SQL/URL argument is checked, not only the first
+  * SQL is read lexically soundly in both directions
+  * lost provenance never makes a delegated action look local
 """
 
 from __future__ import annotations
@@ -67,7 +67,7 @@ def _clean_flow():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F2  positional and keyword calls are gated identically
+# positional and keyword calls are gated identically
 # ══════════════════════════════════════════════════════════════════════════
 
 TERRAFORM = "terraform destroy -auto-approve"
@@ -201,7 +201,7 @@ def test_f2_binding_degraded_names_only_the_tools_that_failed():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F3  every SQL/URL argument is checked, not only the first
+# every SQL/URL argument is checked, not only the first
 # ══════════════════════════════════════════════════════════════════════════
 
 SQL_TAUTOLOGY = "DELETE FROM records WHERE 1=1"
@@ -261,7 +261,7 @@ def test_f3_all_benign_values_still_allow():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F4  SQL, against a real SQLite oracle
+# SQL, against a real SQLite oracle
 # ══════════════════════════════════════════════════════════════════════════
 
 
@@ -367,7 +367,7 @@ def test_f4_an_unsettleable_predicate_fails_closed():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F6  lost provenance never makes a delegated action look local
+# lost provenance never makes a delegated action look local
 # ══════════════════════════════════════════════════════════════════════════
 
 TIER_POLICY = _policy({"tools": ["deploy_prod"]}, "require_approval",

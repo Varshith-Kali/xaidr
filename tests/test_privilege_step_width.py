@@ -20,19 +20,20 @@ So it fails in both directions:
   * a detector narrowing that moves the count and leaves the README alone -> red
   * a README edit that changes the count with no re-measurement           -> red
 
-The second is the one that gets skipped, and the second is the one F7 made
-likely: F7 narrowed four predicates in this exact detector. The claim survived
-it, which is a fact worth having a check behind rather than a sentence.
+The second is the one that gets skipped, and the second is the one a narrowing
+makes likely: the domain narrowings changed four predicates in this exact
+detector. The claim survived them, which is a fact worth having a check behind
+rather than a sentence.
 
 THE DENOMINATOR IS ALSO PINNED, separately from the ratio. 30 + 18 = 48 is
 asserted against the battery file itself, because a denominator that silently
 became "the steps we expected to fire on" would turn a 14/48 reach claim into a
 14/14 tautology while every number in the sentence still looked plausible.
 
-AND IT IS PINNED AS RELABEL-INVARIANT. F9 moved 28 cases between categories
-without touching a single `tool` or `args`, so a whole-battery step count cannot
-move under a relabelling. The README says as much in prose; the last test here
-is that sentence made checkable.
+AND IT IS PINNED AS RELABEL-INVARIANT. The OWASP relabelling moved 28 cases
+between categories without touching a single `tool` or `args`, so a
+whole-battery step count cannot move under a relabelling. The README says as
+much in prose; the last test here is that sentence made checkable.
 """
 from __future__ import annotations
 

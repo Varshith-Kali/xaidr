@@ -1,4 +1,4 @@
-"""F5 · a policy rule must never load successfully and silently never match.
+"""A policy rule must never load successfully and silently never match.
 
 The shape this prevents: `match: {tools: "deploy"}` — a scalar where a list
 belongs. Accepted without error, it would log `loaded local policy (1 rules)`
@@ -80,7 +80,7 @@ def _rule(match=..., conditions=..., **kw):
 # Every shape a match value can wrongly take. Each maps the correct value to a
 # wrong one, so the cases stay meaningful per-field.
 WRONG_MATCH_VALUES = [
-    ("scalar-str", lambda good: good),            # the reported F5 case
+    ("scalar-str", lambda good: good),            # the canonical case
     ("scalar-int", lambda good: 42),
     ("null", lambda good: None),                  # YAML `tools:` with no value
     ("empty-list", lambda good: []),
@@ -104,7 +104,7 @@ def test_reported_case_scalar_tools_is_rejected(caplog):
     with caplog.at_level(logging.ERROR, logger=AUTHZ):
         parsed = parse_action_policy(raw)
     assert parsed is None, (
-        "the reported F5 rule loaded successfully; it will now be reported to "
+        "the canonical scalar-tools rule loaded successfully; it will now be reported to "
         "the operator as an active control and will match nothing"
     )
     text = caplog.text
@@ -167,7 +167,7 @@ def test_property_no_field_is_accepted_and_inert(field, shape, make):
     assert decision == "blocked", (
         f"match.{field} = {make(_VALUE[field])!r} ({shape}) was ACCEPTED "
         f"({parsed['rules']!r}) and then did not fire on input it names "
-        f"(decision={decision!r}). This is the F5 failure mode: the operator "
+        f"(decision={decision!r}). This is the accepted-and-inert failure mode: the operator "
         f"believes a control is active and it is inert."
     )
 
@@ -214,7 +214,7 @@ def test_non_mapping_block_is_rejected(block, value, shape, caplog):
 def test_scalar_conditions_block_cannot_smuggle_trust_below_past_its_guard(caplog):
     """The nastiest of the block cases, and why it is not just cosmetic.
 
-    A-11 rejects `conditions: {trust_below: ...}` because it can never fire in
+    The policy parser rejects `conditions: {trust_below: ...}` because it can never fire in
     open. One missed indent makes `conditions:` a STRING; if the block were
     replaced with {} before the guard read it, the rule would load — armed, with
     the condition the operator wrote to narrow it silently gone.

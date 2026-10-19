@@ -32,7 +32,7 @@ coverage. A fake is worth exactly its fidelity to the call path, and the
 question to ask of each one is not "does this method exist" but "is it on the
 path the framework itself takes".
 
-AUDIT, 2026-08-26 — every seam below checked against the real library at the
+SEAM FIDELITY — every seam below is checked against the real library at the
 version named. "on-path" is the second question, asked explicitly:
 
   requests 2.34.2        Session.send exists; Session.request routes through

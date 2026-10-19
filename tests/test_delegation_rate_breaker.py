@@ -219,7 +219,7 @@ def test_no_warning_is_logged_on_the_delegation_path(caplog):
     assert not breaker_lines, breaker_lines
 
 
-# ── the separation the audit argued for, and (b) requires ────────────────
+# ── the separation (b) requires ──────────────────────────────────────────
 
 
 def test_tool_calls_do_not_feed_the_delegation_counter():

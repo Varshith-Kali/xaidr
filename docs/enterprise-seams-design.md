@@ -6,7 +6,7 @@
 ## 0. Non-negotiables
 
 1. **No behaviour change with no extension registered.** Every seam, unregistered, must leave the **456-row** corpus oracle byte-identical (verdict, score, rule set) and the full suite count unchanged except for the seam's own new tests. (`tests/fixtures/shell_corpus.json`: 277 attacks + 78 benign + 89 benign prose + 12 benign templates. A denominator asserted from memory is the same failure class as a coverage claim asserted from memory, so the gate asserts its own row count: `test_seam_zero_movement.py::test_the_corpus_is_the_size_the_design_doc_claims`.)
-2. **Validate at construction, loudly.** A seam handed something it does not understand raises `ValueError` naming the received type, matching `circuit_breaker=` (`sensor.py:377`) and `enforcement_mode` (`:265`). A silently ignored bad extension is the ADV-2 failure class.
+2. **Validate at construction, loudly.** A seam handed something it does not understand raises `ValueError` naming the received type, matching `circuit_breaker=` (`sensor.py:377`) and `enforcement_mode` (`:265`). A silently ignored bad extension is the quietly-inert failure class.
 3. **Fail-safe at call time, but not silently.** A fault inside an extension hook is caught, the scan proceeds on the core verdict, and the fault is logged at ERROR **once per extension per hook per sensor** with a message that says the control is inert, following `_breaker_counter_failed` (`sensor.py:542`), not the swallow-and-forget style of `_fire_on_trip`.
 4. **`Optional[X]` return means proceed.** The convention already in `autopatch/core.py:113` and the CrewAI hooks. A hook that returns `None` has declined; a value short-circuits.
 5. **Ordering is pinned by tests, not comments.** The three existing invariant tests (`test_circuit_breaker.py:201`, `test_approval_required.py:139`, `:~131`) stay green, and each new seam that touches the verdict path gets one more.
@@ -69,7 +69,7 @@ This package's stricter behaviour is unchanged when `extra` is empty: `trust_bel
 
 **The exemption is keyed on the KEY, not on "an extension is present".** `if "trust_below" not in _extra and (...)` — writing it as `if not _extra and (...)` passes every other test in the file and lets `trust_below` through whenever *any* unrelated condition is registered. `test_trust_below_still_rejected_when_a_DIFFERENT_condition_is_registered` is the discriminating case and goes red against exactly that mis-implementation. (Only its `conditions:` parametrisation discriminates: under `match:`, `trust_below` is caught a second time by the `_MATCH_FIELDS` unknown-key validator.)
 
-Duplicate condition names across two extensions raise at construction naming both extensions and the key, rather than last-write-wins: two packages both believing they own a condition, one silently inert, is the ADV-2 shape.
+Duplicate condition names across two extensions raise at construction naming both extensions and the key, rather than last-write-wins: two packages both believing they own a condition, one silently inert, is the quietly-inert shape.
 
 Measured: corpus oracle byte-identical with no extensions (456 rows, `80f31ff0…`); the suite grows by exactly S2's 20 new tests, with skips unchanged.
 

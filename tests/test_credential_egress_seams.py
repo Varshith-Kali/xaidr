@@ -159,9 +159,11 @@ def test_openai_shape_never_matches_an_anthropic_key():
     assert hits == 0, f"OUT_secret_openai_key matches {hits}/20 Anthropic keys"
 
 
-# ── D3 fail-direction rulings (2026-10-18) ─────────────────────────────────
-# F1 allow, F2 signal, F3 allow, F4 allow, F5 sk_live_ blocks / sk_test_
-# signals, F6 allow, F7 a split or encoded value gets its inline verdict.
+# ── fail-direction decisions ───────────────────────────────────────────────
+# a prefixless high-entropy value is allowed, an unlisted key name signals,
+# a redacted value and a placeholder are allowed, sk_live_ blocks / sk_test_
+# signals, a publishable key is allowed, and a split or encoded value gets
+# its inline verdict.
 
 def _verdicts(sensor, text):
     return sensor.scan_tool_call("write_file", {"path": ".env", "content": text}), \
@@ -170,7 +172,7 @@ def _verdicts(sensor, text):
 
 @pytest.mark.parametrize("shape", ["stripe-test", "stripe-restricted-test"])
 def test_f5_stripe_test_key_signals_and_does_not_block(block, shape):
-    """F5 as ruled: a test-mode key in a tool arg is RECORDED, not halted.
+    """As ruled: a test-mode key in a tool arg is RECORDED, not halted.
     A local .env write is normal dev, and this path is not destination-aware."""
     bad = []
     for i, v in enumerate(_values(SHAPES[shape])):
@@ -190,7 +192,7 @@ def test_f5_stripe_live_key_blocks(block):
 
 
 def test_f2_unlisted_key_name_signals_and_does_not_block(block):
-    """F2: a key-named value under a name DLP_api_key lacks (the gitleaks
+    """A key-named value under a name DLP_api_key lacks (the gitleaks
     framing) surfaces as a signal. It never blocks: `token = …` is ordinary config."""
     rng = random.Random(20261018)
     bad = []
@@ -202,7 +204,7 @@ def test_f2_unlisted_key_name_signals_and_does_not_block(block):
             bad.append((i, name, "tool", tool.action, tool.rules))
         if out.action == "blocked":
             bad.append((i, name, "output", out.action, out.rules))
-    assert not bad, f"F2: {len(bad)} verdicts not signal-only, first: {bad[0]}"
+    assert not bad, f"unlisted key name: {len(bad)} verdicts not signal-only, first: {bad[0]}"
 
 
 F1_PREFIXLESS = {
@@ -237,7 +239,7 @@ def _allowed_clean(sensor, text):
 @pytest.mark.parametrize("kind", sorted(F1_PREFIXLESS))
 def test_f1_prefixless_high_entropy_allowed(block, kind):
     bad = [i for i, v in enumerate(_values(F1_PREFIXLESS[kind])) if not _allowed_clean(block, f"id: {v}")]
-    assert not bad, f"F1 {kind}: {len(bad)}/20 not allowed (indices {bad[:5]})"
+    assert not bad, f"prefixless {kind}: {len(bad)}/20 not allowed (indices {bad[:5]})"
 
 
 @pytest.mark.parametrize("text", F3_REDACTED + F4_PLACEHOLDERS)
@@ -250,7 +252,7 @@ def test_f3_f4_redacted_and_placeholder_allowed(block, text):
 @pytest.mark.parametrize("kind", sorted(F6_PUBLISHABLE))
 def test_f6_publishable_key_allowed(block, kind):
     bad = [i for i, v in enumerate(_values(F6_PUBLISHABLE[kind])) if not _allowed_clean(block, f"STRIPE_PK={v}")]
-    assert not bad, f"F6 {kind}: {len(bad)}/20 not allowed"
+    assert not bad, f"publishable {kind}: {len(bad)}/20 not allowed"
 
 
 F7_FORMS = {
@@ -279,7 +281,7 @@ def test_f7_urlencoded_secret_is_blocked(block):
 def test_f7_encoded_or_split_secret_blocked(block, form):
     hits = [_tool(block, F7_FORMS[form](v)).action == "blocked"
             for v in _values(SHAPES["github-pat"])]
-    assert all(hits), f"F7 {form}: {hits.count(False)}/20 encoded/split credentials ALLOWED"
+    assert all(hits), f"form {form}: {hits.count(False)}/20 encoded/split credentials ALLOWED"
 
 
 @pytest.mark.parametrize("form", sorted(F7_FORMS))

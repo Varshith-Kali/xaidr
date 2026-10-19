@@ -1,4 +1,4 @@
-"""F9: the tool path must report the content and cost it actually measured.
+"""The tool path must report the content and cost it actually measured.
 
 THE FAILURE SHAPE this guards against, as it would appear in output:
 

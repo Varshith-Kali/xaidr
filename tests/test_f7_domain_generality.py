@@ -1,4 +1,4 @@
-"""F7: the two structural tool-argument detectors outside their five personas.
+"""The two structural tool-argument detectors outside their five personas.
 
 THE QUESTION. `scanner.privilege_action` and `scanner.resource_bound` are tuned
 against five agent personas — support, devops, data, research, finance — and
@@ -166,9 +166,9 @@ def test_the_narrowings_did_not_cost_a_battery_catch():
     Every privilege- and resource-shaped tool-call attack in the battery, after
     all five narrowings.
 
-    The four `EXH-*` ids below read `ASI04-*` when this gate was written; F9
-    relabelled the twelve resource-exhaustion cases off ASI04, which is not an
-    OWASP resource category. Same cases, same args, only the label moved."""
+    The four `EXH-*` ids below read `ASI04-*` when this gate was written; the
+    battery relabelling moved the twelve resource-exhaustion cases off ASI04,
+    which is not an OWASP resource category. Same cases, same args, only the label moved."""
     attacks = {a["id"]: a for a in _jsonl("asi_battery/attacks.jsonl")}
     for case_id in ("ASI02-A03", "ASI02-A05", "ASI02-A10", "ASI03-A02", "ASI03-A03",
                     "ASI03-A06", "ASI03-A09", "EXH-A02", "EXH-A05", "EXH-A09",

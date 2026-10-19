@@ -1,4 +1,4 @@
-"""A-8: protect_http must enforce on DESTINATION (blocked-URL list + local
+"""protect_http must enforce on DESTINATION (blocked-URL list + local
 deny-destination policy) for EVERY method incl. GET/DELETE, additive to the
 existing POST/PUT/PATCH body scan (which must keep working).
 

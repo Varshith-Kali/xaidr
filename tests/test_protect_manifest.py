@@ -773,7 +773,7 @@ def test_4c_a_caller_config_error_raises_by_default():
 
     A control that silently is not running because `enforcement_mode="blcok"`
     was misspelled is the worst outcome available, so this one raises — the same
-    ADV-2 loudness Sensor() itself applies.
+    loud validation Sensor() itself applies.
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", XaidrProtectionWarning)

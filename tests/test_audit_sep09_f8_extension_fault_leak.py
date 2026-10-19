@@ -1,4 +1,4 @@
-"""F8: a scanned prompt must not reach the logs via an extension's own
+"""A scanned prompt must not reach the logs via an extension's own
 exception.
 
 THE SHAPE THIS PREVENTS. Unredacted, a `SensorExtension` whose `gate()` raises

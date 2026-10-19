@@ -117,7 +117,7 @@ that rule as written, both were `no_destination`.
   compares the core with the host urllib.parse finds for 5,632 spellings:
   every scheme, separator, host form and tail. A rule that matches the scheme
   literal instead of the address lets most spellings of 169.254.169.254 past it
-  (nine of fifteen in an audit sample); a rule of that shape fails this test.
+  (nine of fifteen in a sample); a rule of that shape fails this test.
 
 **Build decisions 3 to 10 below are accepted as built.** That includes 6:
 `file:` and `data:` are never destinations.

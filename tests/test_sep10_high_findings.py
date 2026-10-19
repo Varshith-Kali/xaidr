@@ -1,12 +1,12 @@
-"""The two HIGH findings that are not parser differentials.
+"""Two relational properties that are not parser differentials.
 
-F1 (URL host) and F2 (SQL predicate boundedness) are pinned in
+The URL-host and SQL-predicate-boundedness cases are pinned in
 tests/test_differential_parsers.py, against the transport and against SQLite —
 they are exactly the shape that file exists for. The two here are relations
 between facts, not readings of a string, so their oracle is behaviour:
 
-    F4  a filter key ANYWHERE suppressed privilege detection
-    F3  a second sensor inherited the first sensor's wrapper and enforced nothing
+    *  a filter key ANYWHERE suppressed privilege detection
+    *  a second sensor inherited the first sensor's wrapper and enforced nothing
 """
 from __future__ import annotations
 
