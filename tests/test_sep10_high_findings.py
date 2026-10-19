@@ -56,8 +56,8 @@ def test_a_filter_or_governance_key_in_another_record_does_not_excuse_a_grant(ar
     {"role": "admin", "approval": "AP-4471"},
 ])
 def test_a_filter_or_governance_key_in_the_SAME_record_still_excuses_it(args):
-    """The 1.14.1 carve-outs are relations between SIBLING arguments and they
-    still hold. Narrowing the scope must not have deleted them."""
+    """The false-positive carve-outs are relations between SIBLING arguments
+    and they still hold. Narrowing the scope must not have deleted them."""
     assert "ASI03_admin_escalation" not in _rules(args)
 
 
@@ -121,7 +121,7 @@ def test_camel_and_snake_spellings_of_one_key_get_one_answer(camel, snake, rule)
     assert _rules(camel) == _rules(snake), f"{camel} != {snake}"
 
 
-# ── the 1.14.1 false-positive carve-outs, unchanged ─────────────────────────
+# ── the false-positive carve-outs, unchanged ────────────────────────────────
 
 @pytest.mark.parametrize("tool, args", [
     ("get_agent_profile", {"user": "self"}),

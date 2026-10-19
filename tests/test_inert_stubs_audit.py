@@ -1,9 +1,12 @@
-"""Inert-stubs audit: no silent-inert paid-tier feature ships on the open surface.
+"""Inert-stubs audit: no silently-inert stub of a feature reserved for an
+extension package ships on the open surface.
 
-A-11 trust_below: a policy condition needing a per-agent trust score (platform
-tier) must be LOUDLY REJECTED at load in open, never silently no-op.
-A-12 quarantine: the paid-tier quarantine state has no open setter and its dead
-checks are removed — the sensor exposes no quarantine attribute implying it.
+A-11 trust_below: a policy condition needing a per-agent trust score (computed
+only by an extension) must be LOUDLY REJECTED at load in open, never silently
+no-op.
+A-12 quarantine: the quarantine state, reserved for an extension package, has
+no open setter and no dead checks — the sensor exposes no quarantine attribute
+implying it.
 A-3 AGT evaluator: the always-allow AGT stub (_evaluate_policy) and its
 _action_policy/_trust_score state are removed; only the local YAML policy is the
 open authorization mechanism (and it still enforces).
@@ -254,15 +257,15 @@ def test_all_documented_match_fields_together_still_load_and_fire():
     ({"id": "empty", "effect": "block", "match": {}, "conditions": {}}, "empty blocks"),
 ])
 def test_rule_with_nothing_to_match_on_is_rejected(rule, label, caplog):
-    """CONTRACT CHANGE (F5 (d)): these two used to assert `is True`.
+    """CONTRACT (F5 (d)): these two must NOT load.
 
-    They were written as A-11 scope guards — "an empty block is not an unknown
-    key" — and the assertion they reached for was "still loads". That is the
-    wrong half of the statement. `_rule_matches` returns False for a rule with
-    no matchers and no conditions, so both of these ARE the accepted-and-inert
-    shape A-11 exists to eliminate; the guards were pinning the bug in place.
+    As A-11 scope guards — "an empty block is not an unknown key" — the
+    tempting assertion is "still loads". That is the wrong half of the
+    statement. `_rule_matches` returns False for a rule with no matchers and no
+    conditions, so both of these ARE the accepted-and-inert shape A-11 exists
+    to eliminate; asserting that they load would pin the bug in place.
 
-    What the scope guard actually needed to say is preserved below: an empty
+    What the scope guard actually needs to say is kept below: an empty
     block must not be reported as an UNKNOWN KEY. It is rejected for being
     unable to fire, which is a different error with a different message.
     """
@@ -274,17 +277,16 @@ def test_rule_with_nothing_to_match_on_is_rejected(rule, label, caplog):
     assert rule["id"] in caplog.text
     assert "NEVER fire" in caplog.text
     assert "unknown key" not in caplog.text, (
-        "an empty block is not an unknown key — the A-11 scope guard this test "
-        f"replaced was protecting exactly this: {caplog.text!r}"
+        "an empty block is not an unknown key — the A-11 scope guard "
+        f"protects exactly this: {caplog.text!r}"
     )
 
 
 def test_unknown_keys_outside_match_are_refused_too():
     """An unknown key at rule or top level is refused like one under match:.
 
-    This test previously asserted the opposite, that such keys were ignored as
-    harmless. That premise was false and is retracted here: an ignored key is a
-    part of the policy that was written and not enforced. Per-field cases are in
+    Ignoring such keys as harmless would be wrong: an ignored key is a part of
+    the policy that was written and not enforced. Per-field cases are in
     test_policy_refuse_never_drop.py."""
     base = {"version": "1", "defaults": {"effect": "allow"},
             "rules": [{"id": "x", "effect": "block", "match": {"tools": ["t"]}}]}
@@ -326,8 +328,8 @@ def test_bare_sensor_adds_nothing_to_the_destination_decision():
 def test_bare_sensor_has_no_escalation_chain():
     """A-12/S3: open is a THREE-STATE local scanner and stays one.
 
-    "No escalation in open" used to be provable by the absence of the concept.
-    S3 adds the seam a link plugs into, so it is now provable only by the chain
+    "No escalation in open" is not provable by the absence of the concept:
+    S3 adds the seam a link plugs into, so it is provable only by the chain
     being EMPTY — which is what makes `scan()` skip the escalation block
     entirely and return the local verdict object unchanged.
     """
@@ -356,8 +358,8 @@ def test_bare_sensor_supplies_no_policy_conditions():
 def test_no_gate_other_than_the_circuit_gate_on_a_bare_sensor():
     """A-12, restated for the S5 gate chain.
 
-    Quarantine is the enterprise package's GATE. Open now has the seam that a
-    gate plugs into, so "no quarantine in open" is no longer provable by the
+    Quarantine is an extension package's GATE. Open has the seam that a
+    gate plugs into, so "no quarantine in open" is not provable by the
     absence of the concept — it is provable by the absence of anything
     REGISTERED. A bare sensor must carry an empty extension tuple, which is what
     makes the gate chain a single ``_circuit_is_blocking()`` call and nothing

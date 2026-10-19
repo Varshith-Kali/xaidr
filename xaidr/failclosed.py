@@ -25,7 +25,7 @@ partition that makes each group independently safe to enable:
     A control the OPERATOR INSTALLED did not run — an extension hook raised, an
     escalator timed out, a breaker counter is inert. Closed means the call is
     refused, because the verdict was computed without a control the deployment
-    paid for. On a bare sensor this group is a no-op by construction: there are
+    relies on. On a bare sensor this group is a no-op by construction: there are
     no extensions, no escalators, no breaker and no patched seams, so nothing
     can report a control fault. That property is what makes it the first group
     an operator should enable.
@@ -35,16 +35,16 @@ partition that makes each group independently safe to enable:
     document past the L1 window budget, a batch past ``MAX_STATEMENTS``, an
     argument tree past the candidate cap. This is the only group whose trigger
     is an attacker's LEVER rather than an accident, and the only one with a
-    real false-positive cost on honest traffic. See
-    ``docs/fail-closed-design.md`` §e for what that cost measures at.
+    real false-positive cost on honest traffic. See section e of
+    ``docs/fail-closed-design.md`` for what that cost measures at.
 
 ``internal``
     The sensor's own code raised. Closed means block. Recommended LAST: the
     trigger is a bug in this package, so enabling it bets the host's
     availability on our test coverage.
 
-WHAT EACH GROUP RETURNS is deliberately NOT a new type. See
-``docs/fail-closed-design.md`` §c: a correct verdict travelling a return path
+WHAT EACH GROUP RETURNS is deliberately NOT a new type. See section c of
+``docs/fail-closed-design.md``: a correct verdict travelling a return path
 whose contract it does not satisfy crashes the host (a LangGraph tool node, for
 one, requires a ToolMessage).
 A fail-closed decision produces an ordinary :class:`ScanResult` with
@@ -247,7 +247,7 @@ def resolve(fail_closed) -> FailClosedConfig:
 # cannot be. `import xaidr` must not crash a host over a corrupt asset — that
 # is the posture `l1._load_and_compile` has always documented and it stays. So
 # the loader RECORDS, import still succeeds, and `DelphiSensor.__init__` is
-# where the operator's `artifact` choice is applied. See §f of
+# where the operator's `artifact` choice is applied. See section f of
 # docs/fail-closed-design.md; this is the first entry there.
 #
 # The registry is also read by `Sensor.degradations` whether or not any group is

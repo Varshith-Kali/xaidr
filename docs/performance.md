@@ -50,9 +50,8 @@ plus `pytest`, no extras and no framework installed. That is the configuration
 quoted because it is the one that proves the zero-dependency claim, and it runs
 on every pull request as CI's `pytest (py<ver>, base)` job.
 
-**No pass count is published here.** This paragraph carried `7603 passed, 163 skipped` <!-- suite-count-ok: retracted figure, quoted so a reader who met it sees it marked false -->
-until it was roughly 670 passes stale, the same drift that removed the table
-from
+**No pass count is published here.** A hand-kept count drifts stale with every
+release, for the reasons given in
 [docs/testing.md](https://github.com/delphisecurity/xaidr/blob/main/docs/testing.md).
 The current count is printed in the log of every CI run by the job that measured
 it; the argument for reading it there rather than here is in that document. What
@@ -64,5 +63,5 @@ Configurations, what CI does and does not build, and the `base` skip breakdown
 are also in
 [docs/testing.md](https://github.com/delphisecurity/xaidr/blob/main/docs/testing.md).
 It is a **source** claim either way, not an install claim: the wheel ships the
-`xaidr` package only. The sdist has carried `tests/` since 1.19.0, so verifying
+`xaidr` package only. The sdist carries `tests/`, so verifying
 it means an extracted sdist or a clone of the repository.

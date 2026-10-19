@@ -171,7 +171,7 @@ class TestRealCrewAI:
     FINISH = "Thought: I am finished.\nFinal Answer: all done"
 
     def test_protect_blocks_a_destructive_tool_call_in_a_real_crew(self, crew_bits):
-        """HARD GATE. The exact scenario xaidr 1.6.1 claimed and did not deliver."""
+        """HARD GATE. The exact scenario `protect()` claims for a real crew."""
         build, executed = crew_bits
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", XaidrProtectionWarning)
@@ -957,8 +957,8 @@ class TestRealToolResultSeam:
     1. a real ``arun`` return value reaches the after position and a poisoned
        one is refused;
     2. a real ``ToolNode`` accepts the refusal ``ToolMessage`` built on the
-       RESULT path — the 1.9.0 crash (right verdict, wrong return type) is as
-       reachable from the new return path as it was from the old one.
+       RESULT path — a crash from the right verdict in the wrong return type
+       is as reachable from the result path as from the arguments path.
 
     The tool's arguments are innocent and its result is the attack, so a pass
     here cannot be coming from the arguments scan.

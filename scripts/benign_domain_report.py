@@ -41,8 +41,8 @@ from collections import defaultdict
 
 # ── which xaidr answered? ────────────────────────────────────────────────────
 # This script publishes the per-domain table quoted in README.md and
-# docs/privilege-tiers.md, so it is a U-1 regenerator and owes the same answer
-# as its ten siblings: `bind` puts the repo root on sys.path (the default, and
+# docs/privilege-tiers.md, so it is a published figure's regenerator and owes
+# the same answer as its ten siblings: `bind` puts the repo root on sys.path (the default, and
 # what every committed figure here was measured against), prints the resolved
 # path and version FIRST, and under XAIDR_FROM_INSTALL=1 leaves sys.path alone
 # and refuses a source tree. See scripts/_provenance.py.

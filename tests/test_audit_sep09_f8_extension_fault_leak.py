@@ -1,21 +1,21 @@
 """F8 (Sept 9 audit): a scanned prompt must not reach the logs via an
 extension's own exception.
 
-REPRODUCED ON 1.16.0 before any of this was written. A `SensorExtension` whose
-`gate()` raised with the scan text in the message put that text on the sensor's
-own ERROR line, verbatim and in full:
+THE LEAK SHAPE. Unredacted, a `SensorExtension` whose `gate()` raises with the
+scan text in the message puts that text on the sensor's own ERROR line,
+verbatim and in full:
 
     xaidr: extension 'acme-quarantine' raised in gate() (ValueError: quarantine
     lookup failed for input 'please summarise this internal memo:
     PRIVATE_PROMPT_CANARY do not disclose'). THIS CONTROL IS INERT until ...
 
-Four hooks reached that one sink and every one of them leaked: `gate`,
-`transform_verdict`, `subject_trust`, `blocked_urls`. `escalation.run_escalators`
-had the identical shape in its own file.
+Four hooks reach that one sink: `gate`, `transform_verdict`, `subject_trust`,
+`blocked_urls`. `escalation.run_escalators` has the identical shape in its own
+file.
 
 THE EXTENSION IS ENTITLED TO THE PROMPT. That is what `ScanRequest.text` is for.
-The sensor's LOG is not, and `_extension_failed` shipped without the treatment
-`_emit_scan_error` had had all along on the scan path four screens away.
+The sensor's LOG is not, so `_extension_failed` needs the same treatment
+`_emit_scan_error` gives the scan path four screens away.
 
 WHY `safe_exc` IS NOT THE FIX, and why this file asserts that directly below.
 `safe_exc` redacts URLs out of a message it otherwise keeps — right for a

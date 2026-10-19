@@ -241,9 +241,9 @@ _TOOL_ARG_BLOCK_CATEGORIES = frozenset({
 # argument is the tool doing its job; see the DLP note below.
 #
 # THE FOUR THAT STAY FILTERED — decided on measurement, not on assumption. They
-# were left out during the 1.2.0 work on FP-risk grounds without being measured;
-# they have since been run against realistic tool arguments and the whole corpus
-# (tests/test_tool_arg_category_filter.py pins the deciding case for each).
+# are excluded on measurement: each has been run against realistic tool
+# arguments and the whole corpus (tests/test_tool_arg_category_filter.py pins
+# the deciding case for each).
 #
 #   llm09 (9 rules — fake reviews, phishing, astroturfing, deepfakes, SEO spam):
 #     OUT OF REMIT. The harm is the CONTENT the model generates, not an action
@@ -521,7 +521,7 @@ class DelphiSensor:
         # DEFAULT IS (), EVERY GROUP OPEN, AND THAT IS NOT NEGOTIABLE HERE.
         # Changing the default is a breaking change for every existing
         # deployment and is its own release with its own notes; see
-        # docs/fail-closed-design.md §d. With `()` the resolved config is a
+        # section d of docs/fail-closed-design.md. With `()` the resolved config is a
         # shared empty object, every `group in self._fail_closed` is a lookup
         # in an empty dict, and no code below this line runs that did not run
         # before the option existed.
@@ -796,7 +796,8 @@ class DelphiSensor:
         """Refuse to construct when an asset did not load as authored.
 
         THE FAULT POINT AND THE FAIL-CLOSED POINT ARE DELIBERATELY DIFFERENT
-        PLACES, and this is the first entry in §f of the design doc. The rule
+        PLACES, and this is the first entry in section f of
+        docs/fail-closed-design.md. The rule
         assets load at MODULE IMPORT — ``l1.INPUT_RULES`` is assigned at import
         time — so by the time any sensor exists the degradation has already
         happened. Making the LOADER raise would mean ``import xaidr`` crashing a
@@ -882,8 +883,8 @@ class DelphiSensor:
         """The verdict a closed group produces. NEVER raises.
 
         Returns an ORDINARY ScanResult. There is no new return type and no new
-        return path anywhere in this package — see docs/fail-closed-design.md
-        §c. A correct verdict sent down a path whose type contract it does not
+        return path anywhere in this package — see section c of
+        docs/fail-closed-design.md. A correct verdict sent down a path whose type contract it does not
         satisfy crashes a LangGraph host, and the lesson taken from that is not
         "be careful with the new type" but "do not add one". This
         result flows through exactly the refusal machinery every content block
@@ -942,7 +943,8 @@ class DelphiSensor:
             )
         except Exception:
             # The refusal signal cannot itself become a new failure point. This
-            # is §f: there is no fail-closed available HERE, because failing
+            # is section f of docs/fail-closed-design.md: there is no
+            # fail-closed available HERE, because failing
             # closed on a failure to report a fail-closed is unbounded regress.
             pass
         return result
@@ -1080,7 +1082,7 @@ class DelphiSensor:
 
         Returns None on a bare sensor, which is the whole point: open computes
         no per-agent trust, which is exactly why `trust_below` is rejected at
-        policy-parse time (A-11). This method is what an enterprise package
+        policy-parse time (A-11). This method is what an extension package
         replaces to make that condition meaningful, and S2 is what lets it
         register the condition NAME alongside.
         """
@@ -1305,7 +1307,7 @@ class DelphiSensor:
             # a `controls` site. The `circuit_state` property above is NOT: it
             # is an accessor a host polls, it decides nothing, and raising out
             # of a property read would be a worse surprise than the stale
-            # answer. See §f.
+            # answer. See section f of docs/fail-closed-design.md.
             self._control_fault("circuit_breaker state read failed")
             return False
 
@@ -2825,22 +2827,22 @@ class DelphiSensor:
             "delegated": _chain.is_delegated(self.agent_id),
             "chainTiers": _chain.current_tiers(),
             # THE SCANNED CONTENT ON THIS PATH IS THE ARGUMENTS, and these three
-            # said otherwise. `scanTimeMs` and `promptLength` were the literal
-            # constant 0 and `promptHash` was a digest of the TOOL NAME, so every
-            # call to one tool shared one hash however different its arguments
-            # were. Measured on 1.12.0: three distinct commands to `run_command`
-            # produced one hash.
+            # describe them. `scanTimeMs` and `promptLength` are measured, and
+            # `promptHash` is a digest of the canonical ARGUMENTS, never of the
+            # tool name: a tool-name digest would give every call to one tool
+            # one hash however different its arguments are, so three distinct
+            # commands to `run_command` would be indistinguishable.
             #
-            # That is not a cosmetic defect. The attribute this maps to is named
+            # That would not be a cosmetic defect. The attribute this maps to is named
             # `gen_ai.security.interaction.content_hash`, and correlating a
             # payload across agents and across time is the only thing a content
             # hash is for. A tool-name digest under that name gives a SIEM a
             # column that always matches, which is worse than an absent one
             # because it looks like it works.
             #
-            # The other three boundaries already hash what they scanned; this one
-            # now does too, over a CANONICAL rendering so that argument order
-            # cannot change the digest of an identical call.
+            # The other three boundaries hash what they scanned and so does this
+            # one, over a CANONICAL rendering so that argument order cannot
+            # change the digest of an identical call.
             "scanTimeMs": _scan_ms,
             "promptLength": len(_canonical_args),
             "promptHash": safe_content_hash(_canonical_args),
@@ -3132,15 +3134,13 @@ class DelphiSensor:
                 """The call's arguments UNDER THEIR REAL PARAMETER NAMES.
 
                 Positional and keyword invocation of the same function must
-                produce the same scan input. They did not: positional values
-                were labelled `arg0`, `arg1`, and every structural extractor
-                here keys on the PARAMETER NAME (`command`, `query`, `url`, …)
-                to decide what a value is. So `run_command(command="terraform
-                destroy -auto-approve")` was gated by an infra_destruction
-                policy and `run_command("terraform destroy -auto-approve")`
-                executed. Measured on 1.10.0: 0 executions keyword, 1
-                positional. A policy that depends on Python call syntax is not
-                a policy.
+                produce the same scan input. Every structural extractor here
+                keys on the PARAMETER NAME (`command`, `query`, `url`, …) to
+                decide what a value is, so a positional value labelled `arg0`
+                would be invisible to it: `run_command(command="terraform
+                destroy -auto-approve")` gated by an infra_destruction policy
+                while `run_command("terraform destroy -auto-approve")` ran.
+                A policy that depends on Python call syntax is not a policy.
 
                 `Signature.bind` plus `apply_defaults` gives the real mapping,
                 keeps keyword-only semantics, and fills defaults so a dangerous
@@ -4105,7 +4105,8 @@ class ProtectedHttpClient:
             # boundary has no in-band way to return a refusal — there is no
             # ToolMessage on an HTTP send — so it raises, exactly as a
             # destination block already does. Same signal, same exception type,
-            # nothing new for a caller to learn. See design doc §c.
+            # nothing new for a caller to learn. See section c of
+            # docs/fail-closed-design.md.
             raise DelphiBlockedError(
                 self._sensor._fail_closed_result(
                     "http_request", fc.group, fc.detail),

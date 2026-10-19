@@ -461,8 +461,8 @@ def explain_action_policy(
             # trust is always None here). Rather than let such a rule SILENTLY
             # never fire — a policy that looks enforced but does nothing — reject
             # the whole policy loudly so the operator sees it and removes the
-            # unsupported condition. (Paid/platform tiers, which do compute trust,
-            # accept it.)
+            # unsupported condition. (An extension that computes trust registers
+            # the condition and is accepted; see S2 below.)
             # Rejected in EITHER placement — under `conditions:` or under `match:`.
             # Only `conditions.trust_below` is ever read at evaluation time, so a
             # rule that puts it under `match:` (the placement the README shows) is

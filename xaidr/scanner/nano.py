@@ -210,11 +210,11 @@ Left at 512, the value the acceptance was measured under.
 NOTE FOR WHOEVER WIRES THIS (deliberate divergence, do not "fix")
 -----------------------------------------------------------------
 The caller's gate must be ``rules score == 0.0`` plus a minimum word count, and
-must NOT include an ``is_descriptive`` term. The paid sensor's equivalent gate
-carries one; measurement showed it hides 20.9% of benign traffic from the model
-at the SAME false-positive rate it admits, while discarding 4 real attacks the
-model scored >= 0.71. It is a volume filter, not a precision filter. Open does
-not have that term today and must not acquire it for consistency with paid.
+must NOT include an ``is_descriptive`` term. Measurement showed such a term
+hides 20.9% of benign traffic from the model at the SAME false-positive rate it
+admits, while discarding 4 real attacks the model scored >= 0.71. It is a volume
+filter, not a precision filter. This gate does not have that term and must not
+acquire it for consistency with another implementation's gate.
 """
 
 from __future__ import annotations

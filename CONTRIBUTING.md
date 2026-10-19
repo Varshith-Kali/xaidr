@@ -128,9 +128,8 @@ to flag rather than block to allow, so the passages still surface.
 
 > **Maintainers.** The conditions themselves, the candidates that were measured
 > and rejected, and the numbers behind them are not in this repository. They are
-> in the private `delphisecurity/xaidr-internal` repository under `detection/`.
-> Read that before proposing a change to this area; the public summary above is
-> deliberately not enough to design against.
+> kept in a private repository. Read them before proposing a change to this
+> area; the public summary above is deliberately not enough to design against.
 
 The lesson generalises. **When a rule fires on something benign, the fix is
 almost never a keyword that recognises the benign case**, because the attacker
@@ -157,7 +156,7 @@ change what a pull request is expected to carry:
   that has no published release behind it. That gate reads GitHub's API rather
   than the checkout, so it is the one check here that a green tree cannot make
   pass.
-- **U-1: no figure without a regenerator.** Any number you put in a release
+- **No figure without a regenerator.** Any number you put in a release
   body, in `README.md`, or in `docs/` needs a committed script that recomputes
   it, named alongside it. This applies to your pull request too — it is the same
   rule as [Every detection change is measured](#every-detection-change-is-measured),

@@ -248,9 +248,8 @@ def test_aspectual_continuation_is_not_a_non_termination_claim():
 # that blindness is the whole reason "0 / 190" is worth quoting. It is also
 # exactly why it CANNOT see this class: it holds 656 leaf key/value pairs, twelve
 # booleans and no integer zeros, so a detector can read `limit_reached: False` as
-# a removed ceiling and still score a clean 0/190. G2 shipped in 1.14.0 flagging
-# 11 of these 50 with 0/190 green over it; G4 as first written flagged 12 of 50
-# with 0/190 and 0/628 green over it. Same blindness, same green suite, twice.
+# a removed ceiling and still score a clean 0/190. A detector can flag a dozen
+# of these 50 with 0/190 and 0/628 green over it: the blind pools cannot tell.
 #
 # The two ALLOWED entries are a residual, not an exemption. `retention: "forever"`
 # on an archive bucket and `expires: "never"` on a perpetual licence are real

@@ -153,8 +153,8 @@ _URL_DANGER_CATEGORIES = frozenset({
     "system_prompt_leak",
 })
 
-# Paid categorizes destructive-command / shell-in-args rules under asi02/asi05/
-# agentic_abuse (not code_execution like open), so a category-only filter misses
+# Destructive-command / shell-in-args rules can be categorized under asi02/asi05/
+# agentic_abuse rather than code_execution, so a category-only filter misses
 # a decoded "rm -rf" / "curl|bash". Mirror the tool-arg path: also admit any
 # HIGH-confidence L1 hit (>= this) regardless of category — that captures
 # TOOL_destructive_args (0.95), ASI05_pipe_to_shell (0.9), MCP_shell_injection

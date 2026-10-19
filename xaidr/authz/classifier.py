@@ -643,10 +643,10 @@ def _walk_was_truncated(node) -> bool:
 def extract_sql_all(arguments: dict) -> list:
     """EVERY SQL-looking value in the arguments, as (path, statement).
 
-    The singular form stopped at the FIRST match, so a tool taking more than one
-    relevant value lost structural enforcement to dictionary order:
-    `{"first": "SELECT 1", "query": "DELETE FROM records WHERE 1=1"}` allowed and
-    the same pair in the other order blocked. Measured on 1.10.0. Enforcement
+    A singular form that stopped at the FIRST match would make structural
+    enforcement depend on dictionary order for a tool taking more than one
+    relevant value: `{"first": "SELECT 1", "query": "DELETE FROM records WHERE
+    1=1"}` allowed and the same pair in the other order blocked. Enforcement
     that depends on key order is not enforcement.
 
     Every candidate is returned, with the path it was found at, so the caller can

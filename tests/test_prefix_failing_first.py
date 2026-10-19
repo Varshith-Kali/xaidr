@@ -1,4 +1,4 @@
-"""Failing-first proofs for 1.12.0 and 1.13.0, written to RUN ON THE PRE-FIX TREE.
+"""Failing-first proofs for the F2-F9 fixes, written to RUN ON THE PRE-FIX TREE.
 
 WHY THIS FILE EXISTS SEPARATELY FROM tests/test_audit_sep05_bypasses.py AND
 tests/test_audit_f8_reporter_redaction.py / tests/test_audit_f9_tool_telemetry.py.
@@ -90,7 +90,7 @@ def _clean_flow():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1.12.0  F2 -- a loaded policy was bypassed by calling the tool positionally
+# F2 -- a loaded policy bypassed by calling the tool positionally
 # ══════════════════════════════════════════════════════════════════════════
 
 TERRAFORM = "terraform destroy -auto-approve"
@@ -125,7 +125,7 @@ def test_f2_a_positional_call_does_not_execute_what_a_keyword_call_refuses():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1.12.0  F3 -- only the first SQL/URL-shaped argument was ever examined
+# F3 -- only the first SQL/URL-shaped argument examined
 # ══════════════════════════════════════════════════════════════════════════
 
 SQL_TAUTOLOGY = "DELETE FROM records WHERE 1=1"
@@ -183,7 +183,7 @@ def test_f3_ordinary_multi_argument_calls_still_run():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1.12.0  F4 -- SQL was string-matched, and wrong in BOTH directions
+# F4 -- SQL string-matched, and wrong in BOTH directions
 # ══════════════════════════════════════════════════════════════════════════
 
 def _rows_left(statement: str) -> int:
@@ -243,7 +243,7 @@ def test_f4_a_genuinely_bounded_statement_is_not_refused(statement):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1.12.0 (fifth class)  the caps -- a bound that DROPPED what it had not read
+# (fifth class)  the caps -- a bound that DROPS what it has not read
 # ══════════════════════════════════════════════════════════════════════════
 
 DESTRUCTIVE = "DELETE FROM records"
@@ -288,7 +288,7 @@ def test_caps_a_value_past_the_candidate_walk_cannot_hide():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1.12.0  F6 -- lost provenance made a delegated action read as local
+# F6 -- lost provenance makes a delegated action read as local
 # ══════════════════════════════════════════════════════════════════════════
 
 TIER_POLICY = _policy({"tools": ["deploy_prod"]}, "require_approval",
@@ -340,7 +340,7 @@ def test_f6_stripping_provenance_never_weakens_the_verdict(strip):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1.13.0  F8 -- a credential in a reporter destination reached the logs
+# F8 -- a credential in a reporter destination reaching the logs
 # ══════════════════════════════════════════════════════════════════════════
 
 CANARY = "s3cr3t-CANARY-token-9f2a"
@@ -421,7 +421,7 @@ def test_f8_the_destination_is_still_named():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1.13.0  F9 -- tool telemetry reported content and cost it had not measured
+# F9 -- tool telemetry reporting content and cost it has not measured
 # ══════════════════════════════════════════════════════════════════════════
 
 def _tool_event(tool="run_command", arguments=None):
@@ -481,7 +481,7 @@ def test_f9_scan_time_is_measured_not_zero():
 
 
 def test_f9_the_openA2A_mapping_carries_the_privilege_tier_fields():
-    """The third half of 1.13.0: the decision was carried and its reason was not."""
+    """The third half of F9: the decision is carried and its reason must be too."""
     from xaidr.schema import to_openA2A
 
     cap = _Capture()

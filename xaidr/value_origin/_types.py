@@ -1,4 +1,4 @@
-"""The value-origin core's enums, value types and constants (§1.1-§1.3).
+"""The value-origin core's enums, value types and constants.
 
 Every name here is part of the vendored interface. Changing one is a
 breaking change and is called out in the PR that makes it.
@@ -28,10 +28,10 @@ class Verdict(str, enum.Enum):
 
 
 class WireValue(str, enum.Enum):
-    """The complete value set of ``valueOrigin`` (§2). Nine, case-sensitive."""
+    """The complete value set of ``valueOrigin``. Nine, case-sensitive."""
 
     PRINCIPAL = "principal"                                   # a DECLARED principal span
-    PRINCIPAL_UNDECLARED_SPAN = "principal_undeclared_span"   # rests on C-1's default
+    PRINCIPAL_UNDECLARED_SPAN = "principal_undeclared_span"   # whole input assumed principal
     TRUSTED_SOURCE = "trusted_source"
     UNTRUSTED_SOURCE = "untrusted_source"
     UNRESOLVED = "unresolved"
@@ -66,7 +66,7 @@ class Mode(str, enum.Enum):
 
 
 class MatchKind(str, enum.Enum):
-    """How a designation matches a read's source argument (V-17)."""
+    """How a designation matches a read's source argument."""
 
     ANY = "any"                # the tool itself is the source (e.g. order_lookup)
     URL_PREFIX = "url_prefix"  # scheme + exact host + port + segment-wise path prefix
@@ -84,11 +84,11 @@ class RecordOutcome(str, enum.Enum):
 class UnresolvedReason(str, enum.Enum):
     """Why extraction produced a finding with no destination (ruling 3.3)."""
 
-    WALK_BOUND = "walk_bound"        # the argument walk hit a bound (C-8, V-11)
-    PARSE_FAILURE = "parse_failure"  # destination-shaped, but did not parse (V-4, 3.2)
+    WALK_BOUND = "walk_bound"        # the argument walk hit a bound
+    PARSE_FAILURE = "parse_failure"  # destination-shaped, but did not parse (ruling 3.2)
 
 
-# Wire strength, weakest first (ruling 2026-09-24). The wire is the weakest
+# Wire strength, weakest first. The wire is the weakest
 # per-destination value, so an authorization that rests on the undeclared-span
 # assumption is never hidden behind a stronger one on the same call.
 WIRE_STRENGTH: Mapping[WireValue, int] = MappingProxyType({
@@ -119,9 +119,9 @@ class Span:
 
 @dataclass(**_DC)
 class Authority:
-    """The normalised authority of a destination (§6 C-6). The ONLY
+    """The normalised authority of a destination. The ONLY
     representation of a destination the core exposes; the raw argument value
-    is never stored on any returned object (C-12)."""
+    is never stored on any returned object."""
 
     scheme: Literal["mailto", "dns", "ip", "tel"]
     value: str
@@ -137,7 +137,7 @@ class SourceDesignation:
     match: MatchKind
     source_arg: str | None = None          # required unless match is ANY
     pattern: str | None = None             # required unless match is ANY
-    key_args: tuple[str, ...] = ()         # arguments whose VALUES select what is read (C-3)
+    key_args: tuple[str, ...] = ()         # arguments whose VALUES select what is read
     label: str                             # operator-facing name; appears in row detail
 
 
@@ -170,16 +170,16 @@ class CallVerdict:
     wire: WireValue
     verdict: Verdict
     row_state: RowState
-    detail: str                                    # the normative row text, §3.4
+    detail: str                                    # the normative row text (row_text)
     findings: tuple[DestinationFinding, ...]       # empty for every absence state
-    truncated: bool                                # argument walk hit its bound (C-8)
+    truncated: bool                                # argument walk hit its bound
 
 
-# (No per-feature generation constant — ruling 2026-09-24; see C-21.)
+# (There is deliberately no per-feature generation constant.)
 LEDGER_MAX_ENTRIES: int = 10_000
-MAX_ARG_LEAVES: int = 64      # same bound as open's strings_in(..., limit=64)
+MAX_ARG_LEAVES: int = 64      # same bound as autopatch.core.strings_in(..., limit=64)
 MAX_ARG_DEPTH: int = 6
 MAX_LEAF_CHARS: int = 4_000   # same ceiling as url_parse.MAX_URL_CHARS
-MAX_KEY_TOKENS: int = 4       # §6 C-3
-MAX_RESULT_LEAF_CHARS: int = 65_536   # V-15: candidates from the first 64 KiB of a result leaf
+MAX_KEY_TOKENS: int = 4       # longest principal n-gram; longest authorizable key
+MAX_RESULT_LEAF_CHARS: int = 65_536   # candidates from the first 64 KiB of a result leaf
 PSL_SNAPSHOT_DATE: str = _PSL_SNAPSHOT_DATE

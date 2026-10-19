@@ -12,9 +12,9 @@ were GREEN on the pre-fix tree, and stay green if you revert every fix F7 made.
 They read `benign_toolcalls/corpus.jsonl` and `discriminator.jsonl`, and those
 pools have no film credit in them, no compositing layer, no calculus, no LMS
 enrolment and no pro bono time entry. A pool that cannot contain the shape
-reports 0 on it forever. The same blindness, on the same two detectors, that the
-1.14.1 note recorded for key-vocabulary errors and the 1.15.0 note recorded for
-value-polarity errors — this is the third axis: DOMAIN.
+reports 0 on it forever. It is the same blindness, on the same two detectors,
+that hides key-vocabulary errors and value-polarity errors — this is the third
+axis: DOMAIN.
 
 So the discriminating assertion here is not "the detectors are clean". It is
 `test_the_domain_pool_flags_only_the_recorded_residual`, which reads the new

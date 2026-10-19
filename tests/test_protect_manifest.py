@@ -317,8 +317,8 @@ def test_nothing_installed_still_returns_a_usable_manifest():
     pulled in nothing at all.
     """
     # The expected count is DERIVED from the registry, not written down. A
-    # literal here was wrong the moment a framework was added, and the failure
-    # it produced said nothing about the gate it was guarding.
+    # literal here goes wrong the moment a framework is added, and the failure
+    # it produces says nothing about the gate it is guarding.
     code = (
         "import xaidr, sys;"
         "from xaidr.autopatch.frameworks import TARGETS;"

@@ -1,6 +1,6 @@
 """S2 · extension-supplied policy condition fields.
 
-The seam lets an enterprise package add names to a rule's ``conditions:`` block
+The seam lets an extension package add names to a rule's ``conditions:`` block
 without forking the parser. What matters most is the case that ships to every
 open user — no extensions — where the parser must behave EXACTLY as it did
 before this seam existed: an unrecognised condition key still rejects the whole
@@ -113,7 +113,7 @@ def test_trust_below_still_rejected_when_a_DIFFERENT_condition_is_registered(pla
 
 def test_an_extension_that_registers_trust_below_may_use_it():
     """S9 is what supplies the score; this only proves the guard is keyed on the
-    name, so the enterprise package can take ownership of it."""
+    name, so an extension package can take ownership of it."""
     assert parse_action_policy(
         _policy({"trust_below": 0.5}),
         extra_conditions={"trust_below": lambda ctx, v: True},

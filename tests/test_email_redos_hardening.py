@@ -16,9 +16,8 @@ WHY THERE IS NOT A SINGLE WALL-CLOCK ASSERTION IN THIS FILE
 A `time.perf_counter() < 1.0` guard is a test of the machine, not of the code.
 It passes on a fast laptop with a quadratic pattern and fails on a loaded CI box
 with a linear one, and the flake it produces is indistinguishable from a real
-regression — which is exactly the failure class removed from this suite in
-`test: assert the normalizer bound structurally, not on a clock` (0f4682c) and
-from the paid tree alongside it.
+regression — the failure class this suite asserts structurally instead (see the
+normalizer bound, likewise asserted structurally rather than on a clock).
 
 So each oracle below asserts the bound the CODE enforces:
 
@@ -32,8 +31,8 @@ So each oracle below asserts the bound the CODE enforces:
   * The bulk threshold is `min_count`, asserted on the boundary (2 vs 3) rather
     than on how long findall took.
 
-The paid tree's counterpart file (tests/test_email_redos_hardening.py) uses
-generous wall-clock ceilings for the first two. That is the one thing not ported.
+A counterpart file in another implementation may use generous wall-clock
+ceilings for the first two; this file deliberately does not.
 """
 from __future__ import annotations
 

@@ -17,9 +17,9 @@ THREE THINGS THIS PINS, and the second and third are the ones that break:
 2. the REFUSAL TYPE still follows ``tool_call_id``. The after position returns
    into the same two contracts the before position does — a ToolCall-driven
    caller is promised a ``ToolMessage`` and raises ``TypeError`` on anything
-   else. That is the 1.9.0 LangGraph crash (right verdict, wrong return type)
-   and it is reachable from a new return path exactly as it was from the old
-   one;
+   else. That is the LangGraph wrong-return-type crash (right verdict, wrong
+   return type), and it is reachable from the after position exactly as from
+   the before position;
 3. the middleware re-entrancy guard must NOT suppress it. ``_MW_TOOL_SCANNED``
    is set for the whole of ``wrap_tool_call`` — including the ``handler(request)``
    call that runs ``BaseTool.run`` underneath it — so guarding the after hook on
@@ -186,7 +186,7 @@ def test_the_result_is_scanned_as_a_tool_result(path):
 
 
 def test_a_refused_result_is_a_ToolMessage_when_the_caller_passed_a_tool_call_id():
-    """The 1.9.0 lesson applied to the after position. A ToolCall-driven caller
+    """The return-type lesson applied to the after position. A ToolCall-driven caller
     (a ToolNode, a create_agent tool node) raises `TypeError: Tool <name>
     returned unexpected type` on a bare string, so a correct block delivered as
     a `str` crashes the graph it was protecting."""
@@ -206,7 +206,7 @@ def test_a_refused_result_is_a_ToolMessage_when_the_caller_passed_a_tool_call_id
         f"a refused tool RESULT came back as {type(out).__name__}; the caller "
         "is a ToolNode or a create_agent tool loop and raises TypeError on "
         "anything but a ToolMessage — a correct block would crash the graph it "
-        "was protecting (the 1.9.0 shape)"
+        "was protecting (the wrong-return-type shape)"
     )
     assert out.content.startswith(_REFUSAL), (
         f"the ToolMessage the ToolNode receives carries {out.content!r} — the "

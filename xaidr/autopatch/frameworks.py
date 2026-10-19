@@ -657,17 +657,17 @@ def _patch_openai_agents(ctx: PatchContext) -> None:
 # ─────────────────────────────────────────────────────────────────────────
 # CrewAI — the sanctioned before_tool_call hook, plus the crew entrypoint.
 #
-# THE TOOL BOUNDARY IS A HOOK, NOT A PATCH, AND THAT IS A CORRECTION.
-# xaidr <= 1.6.1 patched ``crewai.tools.BaseTool.run`` here and the manifest
-# said "every CrewAI tool invocation is scan_tool_call'd before it executes".
-# That claim was false. ``BaseTool.to_structured_tool()`` binds
-# ``CrewStructuredTool(func=self._run)``, so an agent's tool call runs
-# ``invoke()`` -> ``func`` -> ``_run`` and never touches ``BaseTool.run``.
-# Measured against crewai 1.15.17: the patch fired on 0 of 3 agent-driven paths
-# (Crew.kickoff, Crew.kickoff_async, Agent.kickoff) while a destructive command
-# executed, and the manifest reported the boundary as covered throughout. The
-# only path it uniquely saw was a developer calling ``tool.run()`` with no
-# agent — not an agent boundary, and already covered by protect_tools().
+# THE TOOL BOUNDARY IS A HOOK, NOT A PATCH. A patch on
+# ``crewai.tools.BaseTool.run`` cannot honestly claim "every CrewAI tool
+# invocation is scan_tool_call'd before it executes":
+# ``BaseTool.to_structured_tool()`` binds ``CrewStructuredTool(func=self._run)``,
+# so an agent's tool call runs ``invoke()`` -> ``func`` -> ``_run`` and never
+# touches ``BaseTool.run``. Measured against crewai 1.15.17: such a patch fires
+# on 0 of 3 agent-driven paths (Crew.kickoff, Crew.kickoff_async,
+# Agent.kickoff) while a destructive command executes, and a manifest built on
+# it would report the boundary as covered throughout. The only path it uniquely
+# sees is a developer calling ``tool.run()`` with no agent — not an agent
+# boundary, and already covered by protect_tools().
 # ─────────────────────────────────────────────────────────────────────────
 
 

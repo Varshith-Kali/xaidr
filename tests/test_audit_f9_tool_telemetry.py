@@ -1,17 +1,17 @@
-"""F9: the tool path reported content and cost it had not measured.
+"""F9: the tool path must report the content and cost it actually measured.
 
-REPRODUCED ON 1.12.0, from live output:
+THE DEFECT SHAPE, as live output:
 
     "scanTimeMs": 0, "promptLength": 0, "promptHash": "aeaf9a308c3a65df"
 
-and three DIFFERENT commands to `run_command` produced that one hash, because it
-was a digest of the tool NAME. The attribute it maps to is called
+where three DIFFERENT commands to `run_command` produce that one hash, because
+it is a digest of the tool NAME. The attribute it maps to is called
 `gen_ai.security.interaction.content_hash`, and correlating a payload across
 agents and across time is the only thing a content hash is for. A column that
 always matches is worse than an absent one, because it looks like it works.
 
-The other three boundaries (input, output, a2a) already hashed what they
-scanned, so the tool path was the outlier rather than the rule -- which is why
+The other three boundaries (input, output, a2a) hash what they scan, so a
+tool path that does not is the outlier rather than the rule -- which is why
 this is a defect against the schema rather than a redefinition of it, and why
 SCHEMA_VERSION does not move for it. See the version test at the end.
 """
@@ -49,7 +49,7 @@ def _emit(tool="run_command", arguments=None, **kw):
 # ── (a) promptHash is a digest of the ARGUMENTS ─────────────────────────────
 
 def test_different_arguments_to_one_tool_produce_different_hashes():
-    """The reproduction, inverted. Three distinct commands shared one hash."""
+    """The defect, inverted. Three distinct commands must not share one hash."""
     hashes = {
         _emit(arguments={"command": c})["promptHash"]
         for c in ("cat ~/.ssh/id_rsa", "ls -la", "rm -rf /")
@@ -212,11 +212,11 @@ def test_schema_version_did_not_move_for_this_change():
     not. The attributes are named `interaction.content_hash`,
     `interaction.content_length` and `detection.latency_ms`; the schema has
     always said they describe the scanned content and the cost of scanning it.
-    The tool path did not honour that -- it emitted a tool-name digest and two
-    constant zeros. Making an emitter match the schema it already declared is a
+    A tool path that emits a tool-name digest and two constant zeros does not
+    honour that. Making an emitter match the schema it already declared is a
     defect fix, not a redefinition, and there is no working consumer rule to
-    break: a hash that was identical for every call to a tool could not have
-    been correlated on, and a latency of 0 could not have been budgeted against.
+    break: a hash identical for every call to a tool cannot be correlated on,
+    and a latency of 0 cannot be budgeted against.
 
     Moving the version here would tell every consumer to re-check rules that are
     still correct, which is how a version signal stops being read.

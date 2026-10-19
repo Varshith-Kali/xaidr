@@ -198,7 +198,7 @@ def test_tool_result_maps_to_a_tool_surface_and_an_inbound_flow():
            "entry in _INTERACTION_DIRECTION. Neither is emitted by anything "
            "today (no `direction=\"mcp\"` or `\"llm\"` exists in the tree), so "
            "the defect is dormant rather than live — but it is the exact shape "
-           "design §4 names: a value in one table keyed on direction and absent "
+           "a two-table design invites: a value in one table keyed on direction and absent "
            "from its sibling, which produces a half-mapped event the first time "
            "something emits it. Fixing it means deciding whether those two "
            "labels should exist at all, which is not this PR's question.",

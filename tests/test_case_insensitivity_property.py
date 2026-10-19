@@ -2,16 +2,17 @@
 
 WHY THIS FILE EXISTS
 --------------------
-The sibling TypeScript rule compiler in delphi-sentinel built every L1 regex
-WITHOUT the `i` flag. The observable consequence: `Ignore all previous
-instructions` scored 0.30 and was FORWARDED, while the byte-identical lowercase
-form scored 0.96 and was BLOCKED. Shift-key as a bypass.
+A sibling rule compiler in another implementation of the same rule set built
+every L1 regex WITHOUT the case-insensitive (`i`) flag. The observable
+consequence: `Ignore all previous instructions` scored 0.30 and was FORWARDED,
+while the byte-identical lowercase form scored 0.96 and was BLOCKED. Shift-key
+as a bypass.
 
 The Python sensor does not have that bug. It does not have it because of ONE
 line -- `re.compile(r["pattern"], re.IGNORECASE)` in `xaidr/scanner/l1.py` --
-and until this file existed, nothing asserted that line's flag. The property
-held by accident: any edit that dropped the flag, or any future loader that
-compiled patterns on a different path, would have reproduced the sentinel bug
+and without this file nothing asserts that line's flag. The property would hold
+by accident: any edit that dropped the flag, or any future loader that compiled
+patterns on a different path, would reproduce the case-sensitive-compiler bug
 with a green suite.
 
 MEASURED DEPENDENCE (see test_case_insensitivity_is_load_bearing)
@@ -124,7 +125,7 @@ _RULES_DIR = Path(__file__).resolve().parent.parent / "xaidr" / "rules"
 def test_every_l1_pattern_is_compiled_case_insensitively():
     """The single line the property rests on.
 
-    This is the exact assertion whose absence let the sentinel compiler ship a
+    This is the exact assertion whose absence lets a rule compiler ship a
     case-sensitive rule set.
     """
     missing = [
@@ -136,7 +137,7 @@ def test_every_l1_pattern_is_compiled_case_insensitively():
         f"{len(missing)} L1 rule(s) compiled WITHOUT re.IGNORECASE: "
         f"{missing[:10]}. Each one is a shift-key bypass: the lowercase payload "
         f"blocks and the capitalised payload is forwarded. This is the "
-        f"delphi-sentinel defect, reproduced in Python. Restore the "
+        f"case-sensitive-compiler defect, reproduced in Python. Restore the "
         f"re.IGNORECASE argument at the re.compile call in scanner/l1.py."
     )
 
@@ -338,7 +339,7 @@ def test_verdict_is_identical_across_casings(sensor, direction, category, probe)
         f"verdict, so an attacker changes the outcome with the shift key and "
         f"no change to the payload:\n{detail}\n"
         f"    probe: {probe!r}\n"
-        f"    This is the delphi-sentinel defect "
+        f"    This is the case-sensitive-compiler defect "
         f"(Ignore-all-previous 0.30/forwarded vs "
         f"ignore-all-previous 0.96/blocked). The mechanism is re.IGNORECASE at "
         f"the re.compile call in xaidr/scanner/l1.py."
@@ -432,8 +433,8 @@ def test_case_insensitivity_is_load_bearing():
 #
 # Two constructs in the tree are DELIBERATELY case-sensitive. Both are recorded
 # here with their reason and pinned by a test, so that neither is mistaken for
-# the sentinel defect and neither is "fixed" into case-insensitivity by someone
-# reading only the property above.
+# the case-sensitive-compiler defect and neither is "fixed" into
+# case-insensitivity by someone reading only the property above.
 #
 # Searched and found NOT to be exceptions:
 #   * The env-var-name rules (`[A-Z0-9_]*(?:SECRET|TOKEN|...)`) LOOK

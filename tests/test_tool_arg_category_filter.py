@@ -92,9 +92,9 @@ def test_out_of_remit_categories_stay_filtered(block_sensor):
 
 
 # ── the four categories left filtered, each with the case that decided it ─────
-# 1.2.0 left llm09 (9 rules), llm02 (9), eva003 (5) and supply_chain (1) dropped
-# on FP-risk grounds, without measuring them. They were measured afterwards
-# against realistic tool arguments; each entry below is the ORDINARY AGENT
+# llm09 (9 rules), llm02 (9), eva003 (5) and supply_chain (1) stay dropped on
+# FP-risk grounds, measured against realistic tool arguments; each entry below
+# is the ORDINARY AGENT
 # TRAFFIC that would score if the category were admitted, which is what the
 # decision to keep it filtered rests on. If a future change admits one of these,
 # these tests fail and name the traffic it starts flagging.

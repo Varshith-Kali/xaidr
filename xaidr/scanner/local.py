@@ -770,11 +770,11 @@ class LocalScanner:
         # no-multiplication property against this source so a future fusion bonus
         # cannot invalidate it silently.
         #
-        # The gate is deliberately NOT the paid sensor's: it has no
-        # `is_descriptive` term. Measured, that term hides ~21% of benign traffic
+        # The gate deliberately has no `is_descriptive` term. Measured, that term hides ~21% of benign traffic
         # from the model at the SAME false-positive rate it admits, while
         # discarding real attacks the model scores >= 0.71. It is a volume filter,
-        # not a precision filter. Do not add one here for symmetry with paid.
+        # not a precision filter. Do not add one here for symmetry with any
+        # other implementation's gate.
         #
         # Scoped to inbound chat text. Nano's accepted numbers were measured on
         # chat-shaped input only; a2a and output are out of scope until measured.

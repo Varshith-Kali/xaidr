@@ -54,16 +54,16 @@ from ._types import (
 )
 
 __all__ = [
-    # §1.1 enums
+    # enums
     "Origin", "WIRE_STRENGTH", "ORIGIN_STRENGTH", "Verdict", "WireValue", "RowState",
     "Writer", "Mode", "MatchKind", "RecordOutcome", "UnresolvedReason",
-    # §1.2 value types
+    # value types
     "Span", "Authority", "SourceDesignation", "Finding", "DestinationFinding",
     "CallVerdict",
-    # §1.3 constants
+    # constants
     "LEDGER_MAX_ENTRIES", "MAX_ARG_LEAVES", "MAX_ARG_DEPTH", "MAX_LEAF_CHARS",
     "MAX_KEY_TOKENS", "PSL_SNAPSHOT_DATE",
-    # §1.4 functions
+    # functions
     "validate_designations", "validate_mode", "bind_ledger", "bind_fresh_ledger",
     "unbind_ledger", "ledger_bound", "record_principal_input", "record_tool_result",
     "evaluate_call", "should_block", "authority_of", "extract_destinations",
