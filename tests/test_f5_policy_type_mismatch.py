@@ -1,10 +1,10 @@
 """F5 · a policy rule must never load successfully and silently never match.
 
-The audit finding: `match: {tools: "deploy"}` — a scalar where a list belongs —
-parsed without error, logged `loaded local policy (1 rules)`, and then matched
-nothing, because `_glob_any` returns False for any non-list. The operator writes
-a control, it validates, and it does nothing. That is the worst failure mode a
-policy engine has, so this file asserts the property directly:
+The shape this prevents: `match: {tools: "deploy"}` — a scalar where a list
+belongs. Accepted without error, it would log `loaded local policy (1 rules)`
+and then match nothing, because `_glob_any` returns False for any non-list: the
+operator writes a control, it validates, and it does nothing. That is the worst
+failure mode a policy engine has, so this file asserts the property directly:
 
     for every field in the schema, a wrong-typed value is either REJECTED at
     load or the rule FIRES. Never accepted-and-inert.
@@ -96,10 +96,10 @@ ALL_CASES = [
 ]
 
 
-# ── (a) the reproduction, verbatim ───────────────────────────────────────────
+# ── (a) the canonical case, verbatim ─────────────────────────────────────────
 
 def test_reported_case_scalar_tools_is_rejected(caplog):
-    """The exact rule from the finding: `tools: "deploy"` instead of ["deploy"]."""
+    """The canonical case: `tools: "deploy"` instead of ["deploy"]."""
     raw = _policy(_rule({"tools": "deploy"}))
     with caplog.at_level(logging.ERROR, logger=AUTHZ):
         parsed = parse_action_policy(raw)
@@ -215,9 +215,9 @@ def test_scalar_conditions_block_cannot_smuggle_trust_below_past_its_guard(caplo
     """The nastiest of the block cases, and why it is not just cosmetic.
 
     A-11 rejects `conditions: {trust_below: ...}` because it can never fire in
-    open. One missed indent makes `conditions:` a STRING, the block is replaced
-    with {} before the guard reads it, and the rule loads — armed, with the
-    condition the operator wrote to narrow it silently gone.
+    open. One missed indent makes `conditions:` a STRING; if the block were
+    replaced with {} before the guard read it, the rule would load — armed, with
+    the condition the operator wrote to narrow it silently gone.
     """
     rule = _rule({"tools": [_VALUE["tools"]]})
     rule["conditions"] = "trust_below: 0.5"
@@ -287,8 +287,8 @@ def test_rule_with_no_matchers_at_all_is_rejected(rule, caplog):
 def test_non_mapping_defaults_is_rejected(defaults, shape, caplog):
     """The highest-consequence case in the file, and it involves no rule at all.
 
-    A non-mapping `defaults:` was discarded and the policy fell back to the
-    SHIPPED defaults, so `defaults: block` silently turned a deny-by-default
+    Were a non-mapping `defaults:` discarded, the policy would fall back to the
+    SHIPPED defaults, so `defaults: block` would silently turn a deny-by-default
     deployment into an allow-by-default one.
     """
     with caplog.at_level(logging.ERROR, logger=AUTHZ):
@@ -371,14 +371,14 @@ def test_non_mapping_policy_is_rejected_loudly(caplog):
 # ── every error path must actually RENDER ────────────────────────────────────
 
 def test_every_rejection_message_formats():
-    """A guard the fix itself needed.
+    """A guard on the rejection path itself.
 
     `logger.error(fmt, *args)` formats lazily: a %-placeholder/argument count
     mismatch is swallowed by the logging module and printed to stderr, so the
     rejection is silent to anyone reading logs — the exact failure class this
-    file exists to close, reintroduced in the code that closes it. (Three of
-    these were present in the first draft of the fix and found by a probe, not
-    by a test.) This forces every rejection message through getMessage().
+    file exists to close, reintroduced in the code that closes it. A mismatch
+    like that is found by a probe, not by a test that only reads the return
+    value, so this forces every rejection message through getMessage().
     """
     bad_policies = [
         "version: 1",

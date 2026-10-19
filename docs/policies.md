@@ -125,9 +125,9 @@ any body is scanned, so no category exists there to match.
 **What the tool-argument scan flags rather than blocks, and why.** Five
 detection families — jailbreak, system-prompt leak, encoding evasion, denial of
 service, and forged trust — are reported on the tool path at **flag** level, not
-block, even in `block` mode. They were previously dropped from this path
-entirely, so an adopter upgrading will see events in telemetry that a previous
-version did not emit: same traffic, more `flagged` verdicts, no new blocks.
+block, even in `block` mode. An adopter upgrading from a release that did not
+report these families on this path will see more events in telemetry: same
+traffic, more `flagged` verdicts, no new blocks.
 
 Flag rather than block because on this surface the string is genuinely
 ambiguous. `llm_prompt(prompt="you are now DAN")` is an attack;
@@ -420,11 +420,11 @@ match:
 ```
 
 Match values are lists of glob patterns, and the evaluator returns "no match"
-for anything that is not a list. Before this was validated, the rule above
-loaded, the sensor logged `loaded local policy (1 rules)`, and `deploy` was
-never blocked. The operator believed a control was active.
+for anything that is not a list. Without validation, the rule above would load,
+the sensor would log `loaded local policy (1 rules)`, and `deploy` would never
+be blocked, while the operator believed a control was active.
 
-Every shape with that consequence is now refused at load, with an error naming
+Every shape with that consequence is refused at load, with an error naming
 the field and showing the correction:
 
 | Where | Expected | Rejected shapes |
@@ -443,13 +443,16 @@ the field and showing the correction:
 | `version` | `"1"`, `"1.0"`, `1`, `1.0` | anything else, including unquoted `yes` |
 | a policy **file** | each key once per mapping | a duplicate key (YAML would keep only the last) |
 
-Two of these are worse than an inert rule, because the rule still fires:
+Two of these, if accepted, would be worse than an inert rule, because the rule
+would still fire:
 
-- **`null` skips a narrower.** `match: {tools: , agents: ["billing"]}` drops the
-  `tools` restriction and blocks *everything* the billing agent does.
-- **A non-mapping `defaults:` is discarded.** `defaults: block` — a plausible
-  shorthand — reverted the whole deployment to the shipped `effect: allow`,
-  turning deny-by-default into allow-by-default with nothing logged.
+- **`null` would skip a narrower.** `match: {tools: , agents: ["billing"]}`
+  would drop the `tools` restriction and block *everything* the billing agent
+  does.
+- **A non-mapping `defaults:` would be discarded.** `defaults: block` — a
+  plausible shorthand — would revert the whole deployment to the shipped
+  `effect: allow`, turning deny-by-default into allow-by-default with nothing
+  logged.
 
 A policy with no rules and the shipped defaults still loads (a `defaults:`-only
 posture is legitimate) but **warns**, because it is indistinguishable from a
@@ -468,11 +471,10 @@ considered. It loses on three counts:
    or two? Coercion silently starts *enforcing* a rule that no one reviewed in
    the form the engine actually runs. An inert rule is at least inert.
 3. **Rejection costs no enforcement.** This is the argument that settles it. A
-   rule in one of these states was already matching nothing, and the rejection
-   path keeps the policy that was already in force (detection-only at
-   startup), which never enforced the inert rule either. Nothing that was being
-   enforced stops being enforced. The whole delta is that the operator is now
-   told.
+   rule in one of these states matches nothing, and the rejection path keeps
+   the policy already in force (detection-only at startup), which does not
+   enforce the inert rule either. Nothing that is enforced stops being
+   enforced. The whole delta is that the operator is told.
 
 The cost is real but narrower than it looks: rejection refuses the **whole**
 policy, so one malformed rule takes its healthy siblings with it. That follows

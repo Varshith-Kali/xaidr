@@ -87,46 +87,48 @@ python scripts/corpus_report.py      # the raw counts and the benign gates
 ```
 
 **Detection.** A catch is `blocked` **or** `flagged`, and the denominator is the
-attacks we intend to catch — the corpus minus the 95 entries marked
+attacks we intend to catch — the corpus minus the 91 entries marked
 `detection_intent: INTENDED`, which are recognised, genuinely dual-use, and
-deliberately left to a policy the deployer writes. Every one of those 95 carries
+deliberately left to a policy the deployer writes. Every one of those 91 carries
 its reason in the fixture, and `intent_metrics.py` prints them all before it
 prints a percentage.
 
 | | denominator | catches |
 |---|---:|---|
 | rules only, tool path | 186 | **165** (88.7%) |
-| rules only, content path | 186 | **105** (56.5%) |
+| rules only, content path | 186 | **106** (57.0%) |
 | rules only, either path | 186 | **167** (89.8%) |
 | with `nano`, either path | 186 | **172** (92.5%) |
 
 **The `nano` row is the whole of what this repository measures about nano's
 detection.** The five it adds are 5 of the 21 `GAP` entries; the other 16 either
 never reach it or are not recovered, and `intent_metrics.py --nano` names each
-one. No larger recovery figure for nano is published: a recovery figure on a
-corpus that is not in this repository does not regenerate from the shipped
-package, and one scored against a pinned ruleset rather than shipped code says
-nothing about the shipped rules. The prompt-shaped band nano was built for is **not currently measured
+one. Two larger recovery figures published here earlier (23 of 26 on an
+acceptance corpus, and 582 of 595 frame cells) are **withdrawn and superseded**:
+neither regenerates from the shipped package, the corpora behind them are not in
+this repository, and one was scored against a pinned ruleset rather than shipped
+code. No replacement figure is published: a recovery figure on a corpus that is
+not in this repository says nothing a reader can check about the shipped rules. The prompt-shaped band nano was built for is **not currently measured
 here**; see
 [the nano section](README.md#the-optional-ml-signal-for-the-rules-silent-band-nano-experimental).
 
 **Raw counts, unchanged, from `corpus_report.py`.** These are the evidence and
-they stay. They are *not* a detection rate: `blocked / 281` counts every
+they stay. They are *not* a detection rate: `blocked / 277` counts every
 deliberately classify-only entry as a failure, which is why it is no longer
 published as one.
 
 | | n | result |
 |---|---:|---|
-| shell attacks classified | 281 | **267** |
-| shell attacks detected (score > 0) | 281 | **165** |
-| shell attacks blocked | 281 | **165** |
+| shell attacks classified | 277 | **267** |
+| shell attacks detected (score > 0) | 277 | **165** |
+| shell attacks blocked | 277 | **165** |
 
 **False positives, same run, same sensor.**
 
 | | n | result |
 |---|---:|---|
-| benign commands scoring above zero | 74 | **0** |
-| benign commands blocked | 74 | **0** |
+| benign commands scoring above zero | 78 | **0** |
+| benign commands blocked | 78 | **0** |
 | benign prose blocked, content path | 89 | **1** (`bp-055`, documented by ID in `tests/test_benign_prose.py`) |
 | benign prose blocked, tool-argument path | 89 | **0** |
 | benign prose **flagged**, content path | 89 | **50** (with `nano` on: 56 on onnxruntime ≤ 1.23, 60 on 1.26–1.29) |
@@ -138,7 +140,7 @@ published as one.
 | real benign prompts flagged, `nano` on, onnxruntime ≤ 1.23 | 2000 | **35** (1.75%, Wilson 95% [1.26%, 2.42%]) |
 | real benign prompts flagged, `nano` on, onnxruntime 1.26–1.29 | 2000 | **67** (3.35%, Wilson 95% [2.65%, 4.23%]) |
 
-So the false-block rate to read beside 167 of 186 is **0 of 74** on commands,
+So the false-block rate to read beside 167 of 186 is **0 of 78** on commands,
 **1 of 89** on prose, **0 of 12** on templates and **0 of 38** on ordinary
 DevOps operations. The one prose blocker is named rather than absorbed into a
 percentage, so a second one shows up as a new entry instead of as a rounding
@@ -181,6 +183,16 @@ versions, and the spread between them is larger than any of the method effects
 below. A false-positive rate for this model that does not name its onnxruntime
 version is not a figure: runtime drift is not a rounding effect here, and across
 1.20 → 1.29 the count goes 35 → 67.
+
+**Three earlier figures are withdrawn and superseded by the range above:**
+
+- **1.85% (37/2000)** was published without the runtime it was measured on and
+  labelled with onnxruntime 1.29.0, on which this sample yields 67/2000. An
+  accompanying statement that the figure was "37/2000 either way" under runtime
+  drift is withdrawn with it: across the supported range the count goes 35 → 67.
+- **2.20% (44/2000)** scored the 200-character previews rather than the full
+  prompts; scoring previews alone moves the count by +6 on this sample.
+- **1.65% (33/2000)** came from a different, non-disjoint sample.
 
 Two method choices move the figure on their own, and both are avoided here:
 
@@ -239,7 +251,7 @@ layer was NOT changed.
 Reported by family and not per command, the same discipline the README's
 [Coverage and limitations](README.md#coverage-and-limitations) section follows.
 Read that section for what 167 of 186 does and does not mean — in particular,
-which 95 attacks are excluded from that 186 and why.
+which 91 attacks are excluded from that 186 and why.
 
 **What none of these numbers cover.** The corpus is shell commands. It says
 nothing about prompt-shaped attacks, nothing about the A2A path, and nothing

@@ -149,9 +149,9 @@ haystack = ["haystack-ai>=3.0"]
 # hatchling is here as a TEST dependency, not a build one — it is already in
 # `build-system.requires`, but that resolves into an isolated build env the test
 # session never sees. tests/test_sdist_contents.py builds a real sdist and reads
-# the tarball, which is the only way to check the thing that actually broke: the
-# sdist include list shipped no pool and no regenerator while its LISTING showed
-# five pool directories. Without hatchling in the test env that check skips, and
+# the tarball, which is the only way to check what the sdist actually holds: an
+# include list can ship no pool and no regenerator while its LISTING shows five
+# pool directories. Without hatchling in the test env that check skips, and
 # a skipped packaging check is indistinguishable from a passing one.
 dev = ["pytest", "hatchling>=1.18"]
 

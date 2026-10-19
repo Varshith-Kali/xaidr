@@ -7,9 +7,9 @@ no-op.
 A-12 quarantine: the quarantine state, reserved for an extension package, has
 no open setter and no dead checks — the sensor exposes no quarantine attribute
 implying it.
-A-3 AGT evaluator: the always-allow AGT stub (_evaluate_policy) and its
-_action_policy/_trust_score state are removed; only the local YAML policy is the
-open authorization mechanism (and it still enforces).
+A-3 AGT evaluator: there is no always-allow AGT stub (_evaluate_policy) and no
+_action_policy/_trust_score state; only the local YAML policy is the open
+authorization mechanism (and it enforces).
 """
 import logging
 
@@ -57,12 +57,13 @@ def test_local_yaml_policy_still_enforces_without_trust():
 
 # ── A-11 regression: trust_below is rejected in EITHER placement ─────────────
 #
-# The load-time guard originally inspected only `conditions:`. A rule that put
-# trust_below under `match:` loaded fine, and at evaluation time
-# rule["conditions"].get("trust_below") returned None — so the trust check never
-# ran and the policy looked enforced while doing nothing. `match:` is the
-# placement the README documents, so it was the common case. These tests drive
-# the public API (Sensor.set_policy) so they exercise the real user path.
+# The load-time guard inspects `match:` as well as `conditions:`. A guard that
+# read only `conditions:` would load a rule with trust_below under `match:`, and
+# at evaluation time rule["conditions"].get("trust_below") would return None — so
+# the trust check would never run and the policy would look enforced while doing
+# nothing. `match:` is the placement the README documents, so it is the common
+# case. These tests drive the public API (Sensor.set_policy) so they exercise
+# the real user path.
 
 def _sensor():
     return Sensor(agent_id="a11-regression", enforcement_mode="block")
@@ -81,7 +82,7 @@ def test_trust_below_under_conditions_rejected_via_set_policy():
 
 
 def test_trust_below_under_match_alone_rejected_via_set_policy():
-    """(b) trust_below under `match:` alone → policy rejected (the bug)."""
+    """(b) trust_below under `match:` alone → policy rejected (the documented placement)."""
     assert _sensor().set_policy({
         "version": "1", "defaults": {"effect": "allow"},
         "rules": [{
@@ -122,14 +123,14 @@ def test_policy_without_trust_below_still_accepted_via_set_policy():
 
 
 # ── ADV-2 / ADV-3: an unknown match/conditions key disarms the rule ──────────
-# Same failure class as trust_below above, found by an artifact audit: a typo'd
-# match key (`tool` for `tools`) parsed as a VALID policy, set_policy returned
-# True, and the rule then matched nothing. The operator sees a loaded policy and
-# believes the rule is enforcing. Unknown keys now join trust_below in being
+# Same failure class as trust_below above: were a typo'd match key (`tool` for
+# `tools`) parsed as a VALID policy, set_policy would return True and the rule
+# would then match nothing. The operator would see a loaded policy and believe
+# the rule is enforcing. Unknown keys therefore join trust_below in being
 # rejected loudly at load rather than silently ignored.
 
 UNKNOWN_MATCH_KEYS = [
-    ("tool", "tools"),                  # (a) singular typo — the one that was found
+    ("tool", "tools"),                  # (a) singular typo — the most likely one
     ("tool_name", "tools"),             # (b) the internal request key, not the match field
     ("mcp_servers", "mcp_server"),      # (c) plural typo
     ("destination", "destination_type"),

@@ -2,9 +2,9 @@
 
 WHY THIS FILE EXISTS. An ASI01-ASI10 mapping written by hand goes stale in
 place: nothing re-runs it, so rule changes quietly make it wrong. Three kinds of
-change do that: a rule rewritten around address ranges (so spellings the
-mapping records as bypasses, such as https, hex and decimal cloud-metadata
-addresses, now block), a changed descriptive-frame calibration (so payloads the
+change do that: a rule rewritten around address ranges (so the verdict a
+mapping records for a cloud-metadata spelling, such as https, hex or decimal
+addresses, changes), a changed descriptive-frame calibration (so payloads the
 mapping records as dampened to `flagged` now block), and an intent rule
 recalibrated from block to flag in the other direction. A published coverage
 claim that no longer matches what the sensor returns is worse than no claim at

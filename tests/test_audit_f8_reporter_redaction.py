@@ -1,16 +1,13 @@
-"""F8: a credential in a reporter destination must not reach the logs.
+"""A credential in a reporter destination never reaches the logs.
 
-THE TWO SINKS. Unredacted, a WebhookReporter whose URL carries
-`?token=<canary>` and fails against a mock 500 writes the canary TWICE on one
-log line:
+THE TWO SINKS. A failure line carries both the destination and the exception
+text, and httpx's exception text repeats the full request URL:
 
-    WebhookReporter failed to deliver 1 events to https://host/ingest?token=CANARY:
-    Server error '500 Internal Server Error' for url 'https://host/ingest?token=CANARY'
+    WebhookReporter failed to deliver 1 events to <destination>:
+    Server error '500 Internal Server Error' for url '<destination>'
 
-That is why a partial fix is worse than none: THE URL AND THE EXCEPTION ARE
-SEPARATE SINKS. Redacting
-`self._url` alone leaves the credential in httpx's own message, which repeats the
-full request URL. The COUNT is the assertion here, not the presence: every test
+THE URL AND THE EXCEPTION ARE SEPARATE SINKS, so both are sanitised: redacting
+the destination alone would leave the credential in httpx's own message. The COUNT is the assertion here, not the presence: every test
 below asserts the canary appears ZERO times across logging, stdout and stderr.
 
 Every reporter is covered, not only the webhook one, because the shape is

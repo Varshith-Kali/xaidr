@@ -58,6 +58,18 @@ which is everything below.
     figure you cannot check. Publishing one needs a corpus that can itself be
     published, not a rediscovery of this one.
 
+**Two figures published here earlier are withdrawn.** They are recorded so a
+reader who met them sees them marked superseded where they met them:
+
+  * **582 of 595 frame cells recovered — withdrawn, no derivation exists.** The
+    committed frame-matrix generator produces 4320 cells and all 4320 block, so
+    there are 0 clean allows for nano to recover; the 595 population was
+    bare-topic attack shapes, and no such corpus is committed here.
+  * **23 of 26 recovered — withdrawn.** It was scored on the private corpus
+    against a pinned ruleset rather than shipped code, and does not regenerate
+    from the shipped package; scored with shipped code the catch count moves with
+    the onnxruntime version.
+
 When a corpus for this band is committed to this repository, with a script that
 regenerates the number, a figure is published with its environment attached and
 not before.
@@ -115,6 +127,9 @@ onnxruntime versions in the table above.
 |---|---|
 | **1.75%** (35/2000) | **published, for onnxruntime ≤ 1.23.** Wilson 95% [1.26%, 2.42%]. |
 | **3.35%** (67/2000) | **published, for onnxruntime 1.26–1.29.** Wilson 95% [2.65%, 4.23%]. This is what a default install gets today. |
+| 1.85% (37/2000) | **withdrawn, superseded by the range above.** Published earlier without the runtime it was measured on, and labelled with onnxruntime 1.29.0, on which this sample yields 67/2000. |
+| 2.20% (44/2000) | **withdrawn, superseded by the range above.** Scored on the 200-character previews in the acceptance evidence file rather than the full prompts; that alone moves the count by +6. |
+| 1.65% (33/2000) | **withdrawn, superseded by the range above.** Measured on a different, non-disjoint sample, which biases a false-positive rate downward. |
 
 Three ways to get a different number from the same model, each of which this
 method avoids:
@@ -134,8 +149,9 @@ method avoids:
 **The runtime is not a caveat on the figure; it is half of the figure.** The
 artifact is hash-pinned, but the hash fixes which bytes load, not what they
 compute: an int8/int4 graph runs on onnxruntime kernels that change between
-releases. The drift is not a wash: measured across the whole supported range,
-the runtime moves the rate from 35/2000 to 67/2000.
+releases. An earlier statement on this page, that the drift was "a wash" and the
+figure landed on 37/2000 either way, is withdrawn: measured across the whole
+supported range, the runtime moves the rate from 35/2000 to 67/2000.
 
 Everything else in the inference path was checked and ruled out: `tokenizers`
 0.20–0.23 produce byte-identical tokens and bit-identical scores, `numpy` 1.26
@@ -150,7 +166,10 @@ for one.** The model rates entirely innocuous text highly — measured on
 onnxruntime 1.29.0 and pinned by `tests/test_nano_published_figure.py`, a
 style-guide instruction scores 0.13, a security-awareness line about never
 pasting secrets scores 0.57, and "from now on, reply only with the section
-headings" scores 0.88. None is an attack. So a nano flag writes
+headings" scores 0.88. None is an attack. (An earlier list of examples here — a
+DISK BOOT FAILURE question, a job-posting complaint, a team-building question, a
+Yoda dialogue, a game of chess and a riddle — is withdrawn: those scores
+reproduce on no runtime and no artifact variant we can test.) So a nano flag writes
 the *flag-band floor* into `score` and carries the model's own reading on the
 separate `nano_score` / `nano_raw` fields. The verdict is the same; the ranking
 is not, and an uncalibrated signal sorts below every rule flag rather than above

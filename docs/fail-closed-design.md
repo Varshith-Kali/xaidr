@@ -34,7 +34,7 @@ deploy log, not in a customer incident.
 | A4 | `scanner/normalizer.py:66-78` | `typo-keywords.json` corrupt | `print`; normalization silently disabled | refuse to construct |
 | A5 | `l1.py:342`, `l2.py:62`, `classifier.py:68,82,94,106` | ONE regex fails to compile | `print`; that rule is dropped, the other ~159 load | raise, as `UnknownRuleCategory` already does at `l1.py:289` |
 | A6 | `local_policy.py:107-132` | PyYAML absent / file unreadable / policy malformed | `logger.warning`; `None`; **detection-only** | refuse to construct when a policy was *named* |
-| A7 | `local_policy.py` `adopt_policy` | `set_policy()` handed a malformed dict | ~~warning; `None`; returns `False`~~ **Superseded:** refused at ERROR; the policy already in force keeps enforcing; returns `False` | closed — keep-last-good (`tests/test_policy_keep_last_good.py`) |
+| A7 | `local_policy.py` `adopt_policy` | `set_policy()` handed a malformed dict | refused at ERROR; the policy already in force keeps enforcing; returns `False` | already closed — keep-last-good (`tests/test_policy_keep_last_good.py`) |
 | A8 | `scanner/nano.py:837-840`, `scanner/local.py:1089-1092` | nano inference raises / non-finite probability | `p_raw=0.0`, family `none` — the signal the operator enabled is silently absent | block, or refuse to construct on repeat |
 | A9 | `scanner/local.py:390-398` | an escalator's `health()` reports unhealthy or raises | logged; **the link is kept anyway** | refuse to construct |
 
@@ -301,8 +301,8 @@ within that one, three of its thirteen sites.**
 reporter=_NullReporter())`. Measured: `circuit_breaker=None`, `extensions=()`,
 `escalators=()`, `enable_nano=False`, no policy file, autopatch never called.
 Every G2 and G4 site is off before the first item is scanned. Reporting "G2
-costs 0 false positives" from that harness would have been the eighth instance
-of the shape `benign_a2a/README.md` documents.
+costs 0 false positives" from that harness would be the blind-population shape
+`benign_a2a/README.md` documents.
 
 That is what the two shipping conditions were for. Both are now closed.
 
@@ -338,13 +338,13 @@ without a test here:
 | D4 | `_check_destination` raises | blocklist skipped | `DelphiBlockedError` |
 | D5 | wrong-typed input | `not_scannable` | **stays open** (section f7) |
 
-**Three things the sabotage found that a corpus could not have.**
+**Three things the sabotage checks that a corpus could not.**
 
-1. **`_extension_failed` deduplicated its fault handling, not just its log.**
+1. **`_extension_failed` deduplicates its log, never its refusal.**
    The ERROR line is once per (extension, hook) — correct, a broken hook should
-   not produce fifty lines. But the dedup `return`ed EARLY, so a refusal placed
-   after it would have fired on call 1 and silently allowed calls 2..N. Logging
-   and refusing are different questions and now have different lifetimes;
+   not produce fifty lines. A dedup that `return`ed EARLY would make a refusal
+   placed after it fire on call 1 and silently allow calls 2..N. Logging and
+   refusing are different questions with different lifetimes;
    `test_B1_gate_closed_refuses_EVERY_call_not_just_the_first` is the gate.
 2. **The first draft of the harness sabotaged the wrong thing.** It set
    `sensor._scanner.scan = _boom` for all four entry points — but the tool path
@@ -654,11 +654,11 @@ above.
 * **New, on by default:** `Sensor.degradations` — asset load failures,
   unhealthy escalators, faulted extension hooks and inert breaker counters, as
   a list, rather than `print` calls to stdout and ERROR log lines.
-* **Behaviour change, small:** a fault inside the gate chain
-  (`_run_gates`) now fails open with `SCAN_FAILED_OPEN` instead of propagating
-  to the host. This closes a hole in the "no scan entry point can crash the
-  host" contract that `test_operational_resilience.py` already asserted for
-  every other part of the entry point.
+* **Gate-chain faults fail open:** a fault inside the gate chain
+  (`_run_gates`) fails open with `SCAN_FAILED_OPEN` and never propagates to the
+  host, so the gate chain keeps the same "no scan entry point can crash the
+  host" contract that `test_operational_resilience.py` asserts for every other
+  part of the entry point.
 * **Not changed:** the default posture, every threshold, every rule asset, and
   every verdict on all 814 committed benign rows.
 
@@ -752,14 +752,14 @@ that reaches them.
 
 ## Failing-first proof
 
-Both defects below were found DURING this work, by the two instruments the
-shipping conditions required. Each is proved red against the pre-fix state with
-its message, then green.
+Each gate below comes from one of the two instruments the shipping conditions
+required. Each is shown red under a sabotage that produces the failure it
+guards against, with its message, then green.
 
-### 1. The `bounds` signal refused on SIZE, not on coverage
+### 1. The `bounds` signal refuses on coverage, not on SIZE
 
-Sabotage: `_BOUND_SIGNAL_RULES` reverted to name `_OVERSIZED_INPUT_RULE`
-instead of `_SCAN_INCOMPLETE_RULE` — the design as originally written.
+Sabotage: `_BOUND_SIGNAL_RULES` set to name `_OVERSIZED_INPUT_RULE`
+instead of `_SCAN_INCOMPLETE_RULE` — the naive design.
 
 ```
 $ PYTHONPATH=. python -m pytest tests/test_benign_longform.py::test_a_fully_read_long_document_is_NOT_refused -q
@@ -786,10 +786,10 @@ truncated document is also oversized. Nothing that only tested the truncated
 case could have found this. The discriminating input is the one that is
 oversized and NOT truncated, and no committed pool contained one.
 
-### 2. `_extension_failed` deduplicated the refusal, not just the log
+### 2. `_extension_failed` deduplicates the log, never the refusal
 
-Sabotage: the original early-`return` dedup restored, so the fail-closed raise
-placed after it fires on the first call only.
+Sabotage: an early-`return` dedup in `_extension_failed`, so the fail-closed
+raise placed after it fires on the first call only.
 
 ```
 $ PYTHONPATH=. python -m pytest tests/test_fail_closed_sabotage.py::test_B1_gate_closed_refuses_EVERY_call_not_just_the_first -q

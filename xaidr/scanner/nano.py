@@ -601,12 +601,12 @@ def resolve_model_dir(model_dir: Optional[str] = None,
     """Locate the artifact directory. Explicit path, env var, cache, download.
 
     AN EXPLICIT PATH IS AUTHORITATIVE, AND THAT IS THE WHOLE OF THIS FUNCTION'S
-    SECURITY CONTENT. The first version walked
-    ``(model_dir, $XAIDR_NANO_MODEL, DEFAULT_MODEL_DIR)`` and returned the first
-    entry that happened to be complete, so an operator who mounted a vetted
-    artifact directory and mistyped the mount, or whose mount failed to attach,
-    was served whatever sat in ``~/.delphi`` instead — silently, and with the
-    hash pin passing, because the cache holds correctly-hashed bytes too. The
+    SECURITY CONTENT. Walking ``(model_dir, $XAIDR_NANO_MODEL,
+    DEFAULT_MODEL_DIR)`` and returning the first entry that happened to be
+    complete would mean an operator who mounted a vetted artifact directory and
+    mistyped the mount, or whose mount failed to attach, is served whatever sits
+    in ``~/.delphi`` instead — silently, and with the hash pin passing, because
+    the cache holds correctly-hashed bytes too. The
     pin answers "are these the accepted bytes"; it cannot answer "are these the
     bytes the operator pointed at", and only the operator knows why they pointed
     somewhere else.
@@ -662,12 +662,12 @@ def resolve_model_dir(model_dir: Optional[str] = None,
 class DelphiNano:
     """ONNX classifier for the rules-silent band, one instance PER ARTIFACT DIR.
 
-    The cache used to be a single ``_instance``, keyed on nothing. Two sensors in
-    one process asking for two different artifact directories both got the first
-    one, and the second caller was never told: it believed it had loaded the
-    model it named. That is the same silent-substitution defect
-    ``resolve_model_dir`` closes one layer up, so it is closed the same way —
-    the cache is keyed on the RESOLVED directory, and a caller who asks for a
+    A single ``_instance`` keyed on nothing would hand two sensors in one
+    process that ask for two different artifact directories the same first
+    model, and the second caller would never be told: it would believe it had
+    loaded the model it named. That is the same silent substitution
+    ``resolve_model_dir`` prevents one layer up, so it is prevented the same way
+    — the cache is keyed on the RESOLVED directory, and a caller who asks for a
     directory that has not been loaded gets a load, not somebody else's model.
 
     Loads are still paid once per artifact per process, which is the property the

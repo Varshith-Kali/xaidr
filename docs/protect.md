@@ -127,8 +127,14 @@ scans either. Tool *results* are outside every wiring; only tool *arguments* are
 scanned. Pinned in `tests/test_real_frameworks.py::TestRealDeepAgents`, import
 order included (in child processes, since it is a process-global fact).
 
-**CrewAI is a hook, not a `BaseTool.run` patch.** Patching
-`tools.BaseTool.run` does not reach an agent's tool call:
+**CrewAI is a hook, not a `BaseTool.run` patch.** **Correction:** an earlier
+version of this table listed `crewai` → `tools.BaseTool.run` → "tool", and the
+manifest stated that every CrewAI tool invocation is `scan_tool_call`'d before it
+executes. That statement is withdrawn and superseded by this section. An install
+whose `protect()` manifest still lists `tools.BaseTool.run` for CrewAI carries
+the withdrawn claim; the current boundary is the `before_tool_call` hook
+described below. Patching `tools.BaseTool.run` does not reach an agent's tool
+call:
 `BaseTool.to_structured_tool()` binds `CrewStructuredTool(func=self._run)`, so an
 agent's tool call runs `invoke()` → `func` → `_run` and never touches
 `BaseTool.run`. Measured against crewai 1.15.17, a `BaseTool.run` patch fires on

@@ -429,7 +429,7 @@ and teach operators to switch the sensor off. So the rule names the impact class
 `infra_destruction`, and hands the decision to
 [a `require_approval` policy](https://github.com/delphisecurity/xaidr/blob/main/docs/policies.md).
 
-Each of those 95 carries its reason in the corpus fixture itself, on the entry,
+Each of those 91 carries its reason in the corpus fixture itself, on the entry,
 in a `detection_intent_reason` field, so the denominator is auditable by a
 stranger reading the repo rather than something you have to take on trust:
 
@@ -856,7 +856,7 @@ ordinary agent traffic, 700 timed calls per repeat, three repeats:
 |---|---:|---:|
 | Median scan | **0.43 ms** | — |
 | p95 | **0.57 ms** | — |
-| p99 | **0.63 ms** | **3 ms** |
+| p99 | **0.62 ms** | **3 ms** |
 
 The 3 ms p99 is a **ceiling**, about five times the measured p99: the number to
 design against, where the measured column is what one machine actually did.

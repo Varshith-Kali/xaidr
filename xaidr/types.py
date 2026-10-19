@@ -46,11 +46,11 @@ def safe_content_hash(text: str) -> str:
 
     Encodes with ``errors="surrogatepass"`` so lone/paired surrogates (e.g. a
     ``\\udcff`` that arrived from an undecodable byte) hash losslessly instead of
-    raising ``UnicodeEncodeError``. This is the B1 fail-open fix: a malformed
-    byte in user content must never crash a scan (a self-DoS on a security
-    tool). ``surrogatepass`` only changes how surrogate code points encode —
-    which under the previous strict UTF-8 path *raised* — so for every
-    well-formed input the digest is byte-identical to the old
+    raising ``UnicodeEncodeError``. A malformed byte in user content must never
+    crash a scan (that would be a self-DoS on a security tool, and a scan that
+    raises fails open). ``surrogatepass`` only changes how surrogate code points
+    encode — which a strict UTF-8 encode would *raise* on — so for every
+    well-formed input the digest is byte-identical to
     ``sha256(text.encode()).hexdigest()[:16]``.
 
     Every content-hash call site (sensor prompt/output/tool/A2A hashes and the

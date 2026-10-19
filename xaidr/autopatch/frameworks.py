@@ -242,12 +242,12 @@ def _langchain_refusal(text: str, name: str, kwargs: dict) -> Any:
 
     ``BaseTool.run`` has two callers with two different return contracts, and
     returning one contract's value to the other is not a cosmetic mismatch — it
-    crashed the host. A LangGraph ``ToolNode`` calls ``tool.invoke(tool_call)``,
+    crashes the host. A LangGraph ``ToolNode`` calls ``tool.invoke(tool_call)``,
     which requires a ``ToolMessage`` back and raises
     ``TypeError: Tool <name> returned unexpected type: <class 'str'>`` on
     anything else; ToolNode's default ``handle_tool_errors`` re-raises it, so a
-    correctly-blocked call took the whole graph down instead of handing the
-    agent a refusal it could read. Direct ``tool.run(args)`` callers, meanwhile,
+    correctly-blocked call would take the whole graph down instead of handing
+    the agent a refusal it could read. Direct ``tool.run(args)`` callers, meanwhile,
     have always received the plain string and must keep receiving it.
 
     THE DISCRIMINATOR IS ``tool_call_id``, NOT THE SHAPE OF THE INPUT, and the
@@ -339,14 +339,13 @@ def _patch_langchain_core(ctx: PatchContext) -> None:
             return Halt(_langchain_refusal(halt.value, name, kwargs))
 
         def after(result: Any, args: tuple, kwargs: dict) -> Any:
-            # WHAT THE TOOL HANDED BACK. Until this hook existed, this seam
-            # scanned tool ARGUMENTS and nothing else — on the most-used tool
-            # boundary in the estate (every BaseTool, every LangGraph ToolNode
-            # dispatch, every create_agent tool call, CrewAI's langchain
-            # interop). A tool that fetched a poisoned document, read a poisoned
-            # row or called a poisoned MCP server passed that content to the
-            # model verbatim. The MCP seam has scanned its results since it was
-            # written; this one had no position to scan from.
+            # WHAT THE TOOL HANDED BACK. `before` scans tool ARGUMENTS; this
+            # hook scans the RESULT, on the most-used tool boundary in the
+            # estate (every BaseTool, every LangGraph ToolNode dispatch, every
+            # create_agent tool call, CrewAI's langchain interop). Without it, a
+            # tool that fetched a poisoned document, read a poisoned row or
+            # called a poisoned MCP server would pass that content to the model
+            # verbatim. The MCP seam scans its results the same way.
             #
             # `_MW_TOOL_SCANNED` IS DELIBERATELY NOT CONSULTED HERE, and the
             # asymmetry with `before` above is the whole point. That guard is set
@@ -715,11 +714,11 @@ def _patch_crewai(ctx: PatchContext) -> None:
         "crewai", "Crew.kickoff", "input", kickoff_factory,
         "scans the string values of the kickoff inputs before the crew runs",
     )
-    # THE ASYNC KICKOFFS. `kickoff` alone left an async crew's inputs unscanned:
-    # `akickoff` and `kickoff_async` are separate coroutine methods that do not
-    # go through it. Found by the structural async-sibling guard in
-    # tests/test_async_tool_seam.py rather than by review, which is the point of
-    # having it. `make_wrapper` matches the wrapper's sync/async-ness, so the
+    # THE ASYNC KICKOFFS. `kickoff` alone would leave an async crew's inputs
+    # unscanned: `akickoff` and `kickoff_async` are separate coroutine methods
+    # that do not go through it. The structural async-sibling guard in
+    # tests/test_async_tool_seam.py checks this mechanically rather than
+    # leaving it to review. `make_wrapper` matches the wrapper's sync/async-ness, so the
     # same factory serves all three. try_install rather than install: a build
     # without one of these names records the gap instead of losing the others.
     # Written out rather than looped: the structural guard reads these targets
@@ -805,21 +804,18 @@ def _patch_autogen_legacy(ctx: PatchContext) -> None:
         "autogen", "ConversableAgent.execute_function", "tool", factory,
         "SYNC function dispatch is scanned before it executes",
     )
-    # THE ASYNC HALF, which was declared unpatchable and is not. The async reply
-    # path is a_generate_tool_calls_reply -> _a_execute_tool_call ->
-    # a_execute_function, a SEPARATE method that never goes through
-    # execute_function — so the sync patch alone left every async tool call
-    # unscanned, and the manifest said so loudly rather than covering it.
+    # THE ASYNC HALF. The async reply path is a_generate_tool_calls_reply ->
+    # _a_execute_tool_call -> a_execute_function, a SEPARATE method that never
+    # goes through execute_function — so the sync patch alone would leave every
+    # async tool call unscanned.
     #
-    # Saying so loudly was the right half of the response. The wrong half was
-    # concluding it could not be patched: `a_execute_function(self, func_call)`
-    # is an ordinary async method on the same class, taking the same func_call
-    # dict and returning the same (is_exec_success, response_dict) tuple, and
-    # `make_wrapper` has matched a wrapper's sync/async-ness since it was
-    # written. The entry described the gap accurately and then drew the wrong
-    # conclusion from it, which is how a documented gap becomes a permanent one.
-    # Measured against pyautogen 0.2.35: 1 execution of a blocked credential
-    # read before this patch, 0 after.
+    # It is patchable: `a_execute_function(self, func_call)` is an ordinary
+    # async method on the same class, taking the same func_call dict and
+    # returning the same (is_exec_success, response_dict) tuple, and
+    # `make_wrapper` matches a wrapper's sync/async-ness. A gap that is
+    # documented as unpatchable without checking becomes a permanent one.
+    # Measured against pyautogen 0.2.35: with this patch, a blocked credential
+    # read executes 0 times on the async path.
     ctx.try_install(
         "autogen", "ConversableAgent.a_execute_function", "tool", factory,
         "ASYNC function dispatch is scanned before it executes, with the same "
@@ -1145,11 +1141,11 @@ TARGETS: tuple[FrameworkTarget, ...] = (
     #  * `haystack.components.agents` IS NOT A USABLE DETECTION KEY, because it
     #    is a `LazyImporter`: `import haystack.components.agents` leaves
     #    `haystack.components.agents.agent` ABSENT from sys.modules (measured on
-    #    haystack-ai 3.1.1). Listing it made `present()` true while the patcher
-    #    — which may only read sys.modules, rule 1 — could not resolve the class,
-    #    so the whole framework was reported UNPATCHABLE, with a warning and a
-    #    stderr line, at a user who had merely touched the package and had no
-    #    Agent at all. Anyone who actually holds an `Agent` has this module
+    #    haystack-ai 3.1.1). Listing it would make `present()` true while the
+    #    patcher — which may only read sys.modules, rule 1 — could not resolve
+    #    the class, so the whole framework would be reported UNPATCHABLE, with a
+    #    warning and a stderr line, at a user who had merely touched the package
+    #    and had no Agent at all. Anyone who actually holds an `Agent` has this module
     #    loaded, and importing it pulls in every other module the patcher needs
     #    (haystack.hooks.protocol, haystack.dataclasses, the state utils).
     FrameworkTarget(

@@ -1,23 +1,23 @@
-"""The four HIGH bypasses from the September 2026 independent audit.
+"""Four HIGH-severity enforcement invariants, each pinned with a canary.
 
-WHAT THESE TESTS DO DIFFERENTLY, because the suite that missed all four had
-thousands of passes. Every case here asserts THE UNDERLYING FUNCTION DID NOT
-RUN, not that a scanner returned "blocked". A canary list is the oracle. The
-audit's own framing: "use side-effect canaries and actual framework return
-types as the oracle" -- a scanner verdict is a claim about a string, and the
-thing that matters is whether the tool executed.
+WHAT THESE TESTS DO DIFFERENTLY: a suite can have thousands of passes and
+still not check whether a tool ran. Every case here asserts THE UNDERLYING
+FUNCTION DID NOT RUN, not that a scanner returned "blocked". A canary list is
+the oracle: "use side-effect canaries and actual framework return types as the
+oracle" -- a scanner verdict is a claim about a string, and the thing that
+matters is whether the tool executed.
 
 The SQL cases go further and use a REAL SQLite database as a semantic oracle:
 each statement is executed against a disposable three-row in-memory table,
 independently of the verdict, so "this deletes every row" is a measured fact
-rather than a reading of a regex. That is how the false positives were found as
-well as the bypasses: DELETE FROM records WHERE note='1=1' was blocked as a
-tautological mutation and removes zero rows.
+rather than a reading of a regex. That checks false positives as well as
+misses: DELETE FROM records WHERE note='1=1' removes zero rows, so it must not
+be gated as a tautological mutation.
 
-  F2  positional calling bypassed a loaded structural policy
-  F3  the first SQL/URL argument won, hiding later dangerous values
-  F4  SQL was lexically unsound in both directions
-  F6  lost provenance made a delegated action look local
+  F2  positional and keyword calls are gated identically by a structural policy
+  F3  every SQL/URL argument is checked, not only the first
+  F4  SQL is read lexically soundly in both directions
+  F6  lost provenance never makes a delegated action look local
 """
 
 from __future__ import annotations
@@ -67,15 +67,15 @@ def _clean_flow():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F2  positional calling bypassed a loaded structural policy
+# F2  positional and keyword calls are gated identically
 # ══════════════════════════════════════════════════════════════════════════
 
 TERRAFORM = "terraform destroy -auto-approve"
 
 
 def test_f2_positional_and_keyword_calls_are_equivalent():
-    """HARD GATE, with a canary. The bypass shape: keyword 0 executions,
-    positional 1. Both must be 0."""
+    """HARD GATE, with a canary. Keyword and positional calls must both
+    execute 0 times."""
     executed = []
 
     def run_command(command):
@@ -201,7 +201,7 @@ def test_f2_binding_degraded_names_only_the_tools_that_failed():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F3  the first SQL/URL argument won
+# F3  every SQL/URL argument is checked, not only the first
 # ══════════════════════════════════════════════════════════════════════════
 
 SQL_TAUTOLOGY = "DELETE FROM records WHERE 1=1"
@@ -280,8 +280,7 @@ def _rows_after(statement: str) -> int:
     return db.execute("SELECT COUNT(*) FROM records").fetchone()[0]
 
 
-#: Each deletes EVERY row, so each must be gated; the bypass shape is allowed
-#: at score 0.00.
+#: Each deletes EVERY row, so each must be gated, never allowed at score 0.00.
 UNRESTRICTED_DELETES = [
     "DELETE FROM records RETURNING 'where id=7'",
     "WITH x AS (SELECT 1) DELETE FROM records",
@@ -343,7 +342,7 @@ def test_f4_every_statement_is_inspected_not_only_the_first():
 
 
 def test_f4_a_tautology_in_one_conjunct_does_not_unbind_the_predicate():
-    """The auditor's criterion, as boolean structure rather than a longer regex."""
+    """The boundedness criterion, as boolean structure rather than a longer regex."""
     from xaidr.scanner.sql_parse import parse_sql
 
     assert parse_sql(
@@ -368,7 +367,7 @@ def test_f4_an_unsettleable_predicate_fails_closed():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# F6  lost provenance made a delegated action look local
+# F6  lost provenance never makes a delegated action look local
 # ══════════════════════════════════════════════════════════════════════════
 
 TIER_POLICY = _policy({"tools": ["deploy_prod"]}, "require_approval",
@@ -441,7 +440,7 @@ def test_f6_context_survives_a_thread_only_when_propagated():
 
     `contextvars` do not cross a raw thread; that is Python, not this package.
     So the plain form is asserted to lose the context (which is why the README
-    no longer says threads propagate automatically) and the helper is asserted
+    does not say threads propagate automatically) and the helper is asserted
     to keep it.
     """
     headers = _delegation_headers()
@@ -468,7 +467,7 @@ def test_f6_context_survives_a_thread_only_when_propagated():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# STEP 4  the denominator claim the audit found false
+# STEP 4  the denominator claim, derived from the corpus
 # ══════════════════════════════════════════════════════════════════════════
 
 #: Measured, not asserted from memory: marked `INTENDED` — a deliberate
@@ -495,12 +494,12 @@ def _corpus():
 
 
 def test_step4_every_remaining_exclusion_is_actually_classified():
-    """What the audit finding became once the corpus was corrected.
+    """Every exclusion from the denominator is genuinely classified.
 
-    The finding: four INTENDED entries return `unknown` from classify(), so
-    they carry no impact class, nothing exists for a policy to match, and
-    calling them "recognised and handed to your policy" would be false. They
-    are carried as benign commands, not attacks, rather than reworded.
+    Four commands that classify() returns `unknown` for carry no impact class,
+    so nothing exists for a policy to match, and calling them "recognised and
+    handed to your policy" would be false. They are carried as benign
+    commands, not attacks.
 
     So the invariant is not "exactly four are unclassifiable". It is the
     stronger one: EVERY exclusion that remains is genuinely recognised. If a future entry is excluded on the strength of a
@@ -791,9 +790,9 @@ def test_the_unparsed_shape_is_gated():
     pytest.param("SELECT '" + "y" * MAX_SQL_CHARS + "'; ", id="literal-padding"),
 ])
 def test_a_long_prefix_cannot_hide_the_statement_after_it(prefix):
-    """Truncating text cuts the value in half and loses the remainder. Same
-    bypass as the statement cap, reached with a long prefix instead of many
-    statements. The SQLite oracle proves the payload is real before the verdict
+    """Truncating text would cut the value in half and lose the remainder: the
+    same failure shape a dropping statement cap would have, reached with a long
+    prefix instead of many statements. The SQLite oracle proves the payload is real before the verdict
     is read."""
     query = prefix + DESTRUCTIVE
     assert len(query) > MAX_SQL_CHARS
@@ -852,8 +851,8 @@ def test_the_statement_cap_boundary_is_exact():
 
 
 def test_the_statement_cap_is_enforced_in_exactly_one_place():
-    """Three enforcement points for one constant was the smell that hid a dead
-    one. Parsed statements stay capped; the markers are extra."""
+    """One enforcement point for one constant: several copies of a bound let
+    one go dead unnoticed. Parsed statements stay capped; the markers are extra."""
     shapes = parse_sql("; ".join(["SELECT 1"] * 500))
     parsed = [s for s in shapes if s.statement != UNPARSED_STATEMENT]
     assert len(parsed) <= MAX_STATEMENTS, len(parsed)
@@ -894,7 +893,7 @@ def test_ordinary_sql_under_both_caps_is_untouched(query):
 
 
 def test_a_large_but_ordinary_batch_under_the_caps_is_untouched():
-    """The false-positive guard for the fix itself: a realistic migration that
+    """The false-positive guard for the caps themselves: a realistic migration that
     sits under both caps must not acquire an unparsed marker."""
     query = "; ".join([f"UPDATE t SET c = {i} WHERE id = {i}"
                        for i in range(MAX_STATEMENTS - 1)])

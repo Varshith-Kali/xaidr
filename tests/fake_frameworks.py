@@ -155,8 +155,8 @@ def install_langchain_core() -> types.ModuleType:
             # `_format_output` returns a ToolMessage iff tool_call_id is not
             # None, and the raw content otherwise. Omitting it here would leave
             # the seam's type-discrimination untested in the default suite —
-            # the same "fake with the wrong fidelity" trap the CrewAI seam fell
-            # into. Verified against langchain-core 1.6.1.
+            # the same "fake with the wrong fidelity" trap the module docstring
+            # describes for CrewAI. Verified against langchain-core 1.6.1.
             result = (
                 self.func(**tool_input)
                 if isinstance(tool_input, dict)

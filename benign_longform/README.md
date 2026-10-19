@@ -22,9 +22,9 @@ those bounds is the L1 scan window at `L1_MAX_SCAN_CHARS = 100 000`.
   shell.template         max_len=44
 ```
 
-So "0 benign items block on the over-length path" was never a measurement. It
-was absent test data, and shipping the group on the strength of it would have
-been the eighth instance of the blind-population failure
+So "0 benign items block on the over-length path", read off those pools, would
+not be a measurement. It would be absent test data, and shipping the group on
+the strength of it would be the blind-population failure
 `benign_a2a/README.md` documents.
 
 ## What's here
@@ -94,7 +94,7 @@ windowed scan then covers completely. A 150 000-character contract is two
 windows out of an eight-window budget — fully read — and carried the identical
 rule to a 900 000-character one whose tail was never reached.
 
-The first design of `bounds` refused on that rule. Measured on this pool, over
+The naive design of `bounds` refuses on that rule. Measured on this pool, over
 the 9 items that are clean at the default posture:
 
 ```
@@ -104,7 +104,7 @@ SHIPPED (refuse on LLM01_input_tail_unscanned)   refused-and-unread 2   refused-
 
 **Four fully-read documents refused under the naive signal; zero under the
 shipped one, with no loss of coverage on the truncated items.** That is why
-`scanner/l1.py` now carries a second rule, `LLM01_input_tail_unscanned`, fired
+`scanner/l1.py` carries a second rule, `LLM01_input_tail_unscanned`, fired
 by `LocalScanner._scan_tail` when the windows run out before the text does, and
 why `_BOUND_SIGNAL_RULES` in `sensor.py` names that one and not the other.
 
@@ -206,7 +206,7 @@ Two distinct causes, both length-correlated:
   and *some* target word co-occur with near certainty (`action=relay
   target=records` in the log tail, `action=export target=Data` in the
   transcript). The longer the honest document, the likelier the pair. This
-  fires on all twelve.
+  fires on all fifteen scoring items when the scan is complete.
 * **DLP digit-run patterns span whitespace.** The SSN and phone patterns match
   across a newline, so a log line ending in a bare number followed by a line
   starting with a timestamp matched `DLP_ssn`. The generator now terminates such

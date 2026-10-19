@@ -1,14 +1,14 @@
 """The LangChain tool seam's AFTER position: what the tool handed back.
 
-WHAT WAS MISSING. ``_patch_langchain_core`` installed
-``make_wrapper(orig, before=before)`` on ``BaseTool.run`` and ``.arun`` — no
-``after``. That seam is the most-used tool boundary in the estate: it covers
-every ``langchain_core`` ``BaseTool``, every tool a LangGraph ``ToolNode``
-dispatches, every tool inside ``create_agent``, and CrewAI's langchain interop.
-On all of it the tool's ARGUMENTS were scanned and its RETURN VALUE was not, so
-a tool that fetched a poisoned document, read a poisoned row or called a poisoned
-MCP server handed that content to the model verbatim. The MCP seam has scanned
-its results since it was written; this one never had the position to scan from.
+WHY THE AFTER POSITION MATTERS. ``_patch_langchain_core`` installs
+``make_wrapper`` on ``BaseTool.run`` and ``.arun`` with an ``after`` hook as
+well as a ``before`` one. That seam is the most-used tool boundary in the
+estate: it covers every ``langchain_core`` ``BaseTool``, every tool a LangGraph
+``ToolNode`` dispatches, every tool inside ``create_agent``, and CrewAI's
+langchain interop. Were only the tool's ARGUMENTS scanned there and not its
+RETURN VALUE, a tool that fetched a poisoned document, read a poisoned row or
+called a poisoned MCP server would hand that content to the model verbatim. The
+MCP seam scans its results too, so both tool boundaries hold the same position.
 
 THREE THINGS THIS PINS, and the second and third are the ones that break:
 
@@ -132,9 +132,9 @@ def test_a_poisoned_tool_result_is_refused_on_the_async_path():
 
 
 def test_the_fake_asserts_the_async_seam_and_not_the_sync_one():
-    """HARNESS NON-BLINDNESS. `arun` used to delegate to `self.run` in the fake,
-    so the patched SYNC wrapper ran inside every async call and the test above
-    would pass with `arun` completely unpatched. It dispatches independently now;
+    """HARNESS NON-BLINDNESS. If `arun` delegated to `self.run` in the fake, the
+    patched SYNC wrapper would run inside every async call and the test above
+    would pass with `arun` completely unpatched. It dispatches independently;
     this asserts that, so the async assertion keeps meaning what it says."""
     fakes.install_langchain_core()
     cap = _Cap()
@@ -199,9 +199,9 @@ def test_a_refused_result_is_a_ToolMessage_when_the_caller_passed_a_tool_call_id
         {"type": "tool_call", "name": "read_doc", "args": BENIGN_ARGS, "id": "call-1"}
     )
     # Two failure modes, and they are different defects, so each names its own.
-    # Pre-fix the type is already right (the tool's own ToolMessage) and the
-    # CONTENT is the injection; under a refusal that ignores tool_call_id the
-    # content is right and the TYPE crashes the graph.
+    # Without a result scan the type would already be right (the tool's own
+    # ToolMessage) and the CONTENT would be the injection; under a refusal that
+    # ignores tool_call_id the content is right and the TYPE crashes the graph.
     assert isinstance(out, messages.ToolMessage), (
         f"a refused tool RESULT came back as {type(out).__name__}; the caller "
         "is a ToolNode or a create_agent tool loop and raises TypeError on "

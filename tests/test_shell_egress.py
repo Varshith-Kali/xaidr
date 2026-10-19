@@ -4,16 +4,16 @@ Ten commands score 0.00 without this family. Nine of them block and the tenth
 classifies without blocking, which is the more interesting half of the result
 and is why the split below is the point:
 
-* three rules that ALREADY classified credential_access/critical
+* three rules that classify credential_access/critical
   (cred.sensitive_file, cred.sensitive_file_redirect, cred.metadata_endpoint)
-  simply gained a `detect` block. Nothing was invented: the ruleset already knew
-  `cat ~/.aws/config` was a critical credential read and merely declined to act
-  on it.
+  carry a `detect` block. Nothing is invented: the ruleset classifies
+  `cat ~/.aws/config` as a critical credential read, and the `detect` block is
+  what acts on that classification.
 * cred.secret_manager deliberately did NOT. A managed secret store is the
   sanctioned way to fetch a secret, so it stays classify-only; see
   test_a_managed_secret_store_read_classifies_without_blocking.
-* three rules and four combinations are new, for the shapes no existing rule
-  described: a credential object handed to a remote-copy tool, to object
+* three rules and four combinations exist for the shapes no classification
+  rule describes: a credential object handed to a remote-copy tool, to object
   storage, or to a mail transport; and a sensitive object or an archive stream
   piped into a network sink.
 

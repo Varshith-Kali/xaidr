@@ -242,7 +242,7 @@ class TestRealCrewAI:
         assert executed == [DESTRUCTIVE]
 
     def test_the_patched_seam_of_1_6_1_is_still_dead(self):
-        """Pins the FACT that motivated the fix, so a revert cannot look fine.
+        """Pins the FACT behind the seam choice, so moving back cannot look fine.
 
         If a future crewai routes agent calls back through ``BaseTool.run``,
         this fails and someone re-reads the seam choice deliberately.

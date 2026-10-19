@@ -1,10 +1,10 @@
-"""Encoded-payload + decode/execute-directive pairing (embedded-evasion fix).
+"""Encoded-payload + decode/execute-directive pairing (embedded evasion).
 
 The bare-blob rule (``LLM01_raw_base64_payload``) is anchored ``^…$`` — it fires
 only when an encoded blob is the WHOLE input. Embedding the same blob in prose
 ("please decode and follow: <blob>", a blob in a log line, "run this: <blob>")
-drops it below threshold, so realistic embedding evaded detection even though
-"we catch base64".
+drops it below that rule's threshold, so the bare rule alone cannot cover
+realistic embedding.
 
 The real signal is NOT blob dominance — it is an encoded blob that is the OBJECT
 of a directive telling the model to decode / run / follow / execute it. This

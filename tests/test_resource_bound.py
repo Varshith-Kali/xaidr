@@ -33,8 +33,8 @@ def scan(tool, args):
     """The structural scanner, imported at CALL time on purpose.
 
     A module-level import makes this file uncollectable against a tree that does
-    not have the detector — and that tree is exactly the pre-fix state these
-    tests have to be shown RED against. ``ModuleNotFoundError`` during collection
+    not have the detector — and a failing-first run has to show these tests RED
+    against exactly such a tree. ``ModuleNotFoundError`` during collection
     is not a failure message; "EXH-A02 not caught" is. So the absent detector
     degrades to "finds nothing", every catch assertion fails with the case it
     missed, and the benign assertions pass vacuously, which is what

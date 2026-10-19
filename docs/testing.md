@@ -148,6 +148,22 @@ leaves `asi_battery/` out, and the tests that read it skip with a reason that
 says so (`tests/conftest.py`). A clone runs all of it, and the CI logs are the
 record of that run.
 
+## Retraction record
+
+Kept in place rather than deleted: a reader who met one of these figures needs
+to see it marked superseded where they met it.
+
+- **`base` 7603 passed / 163 skipped, `full` 7664 passed / 137 skipped, and the three framework rows** <!-- suite-count-ok: superseded figures, quoted so a reader who met them sees them marked superseded -->
+  — superseded and withdrawn. These were published on this page in an earlier
+  release. The `full` row trailed the measured count by roughly 670 passes, and
+  the table disagreed with this page's own skip breakdown. The same `base`
+  figure, also published in `docs/performance.md`, is withdrawn there too. The
+  current counts are in the CI logs; see "Where the counts are".
+- **"no optional extras installed: 7453 passed, 6 skipped"** <!-- suite-count-ok: superseded figure, quoted so it stays visible where it was made --> — superseded and
+  withdrawn. That figure was measured with `.[http,trace,dev]` installed, not in
+  an extras-free venv, so it described a different configuration from the one
+  it named. The extras-free count is the one CI's `base` job prints.
+
 ## Counting an extras-free install
 
 - **An extras-free count comes from an extras-free venv.** A count measured

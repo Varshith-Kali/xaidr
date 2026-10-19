@@ -10,9 +10,9 @@ misses async tools. A real `langchain_core` async tool has `func=None` and
   * every async call goes `ainvoke` -> `arun` -> `_arun` -> `self.coroutine` and
     touches neither.
 
-The observable symptom with langchain_core 1.6.2: a blocked credential read
-executes once on the async path and zero times on the sync path, same tool,
-same argument. A sync-only `def wrapper` cannot cover it.
+With langchain_core 1.6.2, the observable symptom of such a wrapper would be a
+blocked credential read executing once on the async path and zero times on the
+sync path, same tool, same argument. A sync-only `def wrapper` cannot cover it.
 
 The same question asked of every other shape covers three more:
 
@@ -107,7 +107,7 @@ def _protect(**kw):
 
 @requires_lc
 def test_a_real_async_langchain_tool_is_scanned(sensor):
-    """HARD GATE. The auditor's finding, on the real framework."""
+    """HARD GATE. An async tool is scanned, on the real framework."""
     from langchain_core.tools import tool
 
     executed = []
@@ -126,7 +126,7 @@ def test_a_real_async_langchain_tool_is_scanned(sensor):
 
 @requires_lc
 def test_the_async_and_sync_halves_agree(sensor):
-    """Same tool, same argument, both paths. The defect is that they disagree."""
+    """Same tool, same argument, both paths. They must agree."""
     from langchain_core.tools import tool
 
     executed = []
@@ -615,8 +615,8 @@ def test_the_structural_guard_can_fail():
     """Non-vacuity. If the guard cannot fail it is decoration.
 
     Re-runs the same rule with the async autogen seam removed from the patched
-    set, which is exactly the state this branch found, and asserts it is
-    reported.
+    set, which is exactly the state the guard exists to report, and asserts it
+    is reported.
     """
     if not HAVE_AG_LEGACY:
         pytest.skip("needs pyautogen 0.2 to resolve the class")
@@ -634,8 +634,8 @@ def test_the_structural_guard_can_fail():
     declared = {d for d in _declared_unpatchable()
                 if d.endswith("a_execute_function")}
     assert not declared, (
-        "a_execute_function is declared unpatchable again; it is patchable and "
-        "this branch patched it"
+        "a_execute_function is declared unpatchable; it is patchable and "
+        "frameworks.py patches it"
     )
 
 

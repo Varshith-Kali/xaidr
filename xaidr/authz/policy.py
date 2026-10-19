@@ -162,7 +162,7 @@ def _reject_unknown_keys(
 
 # ── F5 · type validation ─────────────────────────────────────────────────────
 #
-# A-11 (above) closed the case where a match/conditions KEY is wrong. F5 is the
+# A-11 (above) rejects the case where a match/conditions KEY is wrong. F5 is the
 # same failure with the key right and the VALUE the wrong shape:
 #
 #     match:
@@ -425,12 +425,11 @@ def explain_action_policy(
                     ", ".join(sorted(EFFECTS)),
                 )
                 return _refused("invalid_effect", f"{at}.effect")
-            # A non-mapping match:/conditions: block was silently replaced with
-            # {} here, which is how `conditions: "trust_below: 0.5"` (a YAML
-            # string, from one missed indent) slipped past the trust_below
-            # rejection below AND dropped the condition — arming the rule on
-            # traffic the operator had excluded. Both blocks are now validated
-            # before anything reads them.
+            # Both blocks are validated before anything reads them. Replacing a
+            # non-mapping match:/conditions: block with {} would let
+            # `conditions: "trust_below: 0.5"` (a YAML string, from one missed
+            # indent) evade the trust_below rejection below AND drop the
+            # condition — arming the rule on traffic the operator had excluded.
             for block_name in ("match", "conditions"):
                 block = r.get(block_name)
                 if block_name in r and block is None:
@@ -546,12 +545,12 @@ def explain_action_policy(
                 "message": r.get("message"),
             })
 
-        # `defaults:` is the highest-consequence block in the file and had the
-        # quietest failure: a non-mapping was replaced with {} and the policy
-        # loaded with the SHIPPED defaults. `defaults: block` — a plausible
-        # shorthand — parsed as a string, was discarded, and silently turned a
+        # `defaults:` is the highest-consequence block in the file and has the
+        # quietest failure mode: replacing a non-mapping with {} would load the
+        # policy with the SHIPPED defaults. `defaults: block` — a plausible
+        # shorthand — parses as a string; discarding it would silently turn a
         # deny-by-default deployment into an allow-by-default one. No rule is
-        # involved, so none of the rule-level guards above could see it.
+        # involved, so none of the rule-level guards above can see it.
         raw_defaults = raw.get("defaults")
         if "defaults" in raw and raw_defaults is None:
             logger.error(

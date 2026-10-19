@@ -1,19 +1,19 @@
 """F9: the tool path must report the content and cost it actually measured.
 
-THE DEFECT SHAPE, as live output:
+THE FAILURE SHAPE this guards against, as it would appear in output:
 
     "scanTimeMs": 0, "promptLength": 0, "promptHash": "aeaf9a308c3a65df"
 
-where three DIFFERENT commands to `run_command` produce that one hash, because
-it is a digest of the tool NAME. The attribute it maps to is called
+where three DIFFERENT commands to `run_command` would produce that one hash,
+because it would be a digest of the tool NAME. The attribute it maps to is called
 `gen_ai.security.interaction.content_hash`, and correlating a payload across
 agents and across time is the only thing a content hash is for. A column that
 always matches is worse than an absent one, because it looks like it works.
 
 The other three boundaries (input, output, a2a) hash what they scan, so a
-tool path that does not is the outlier rather than the rule -- which is why
-this is a defect against the schema rather than a redefinition of it, and why
-SCHEMA_VERSION does not move for it. See the version test at the end.
+tool path that did not would be the outlier rather than the rule -- which is
+why hashing the tool content conforms to the schema rather than redefining it,
+and why SCHEMA_VERSION does not move for it. See the version test at the end.
 """
 
 from __future__ import annotations
@@ -61,11 +61,11 @@ def test_different_arguments_to_one_tool_produce_different_hashes():
 
 
 def test_the_hash_is_not_the_tool_name_digest():
-    """The specific regression. Named separately from the test above so the
-    failure says WHICH defect came back."""
+    """The specific failure shape. Named separately from the test above so the
+    failure says WHICH property broke."""
     data = _emit(arguments={"command": "cat ~/.ssh/id_rsa"})
     assert data["promptHash"] != safe_content_hash("run_command"), (
-        "promptHash is a digest of the tool NAME again")
+        "promptHash is a digest of the tool NAME")
 
 
 def test_argument_key_order_does_not_change_the_hash():
@@ -114,8 +114,8 @@ def test_prompt_length_is_the_canonical_argument_length():
 
 
 def test_empty_arguments_report_zero_length_honestly():
-    """Zero is the right answer here, and the point of the fix is that it is now
-    a measurement rather than a constant."""
+    """Zero is the right answer here, and the point is that it is a
+    measurement rather than a constant."""
     data = _emit(arguments={})
     assert data["promptLength"] == len(_canonical_arguments({}))
     assert data["promptHash"] == safe_content_hash(_canonical_arguments({}))
