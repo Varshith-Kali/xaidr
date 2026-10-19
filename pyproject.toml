@@ -232,7 +232,6 @@ include = [
     # the regenerators every published figure requires, and the suite that gates them
     "/scripts",
     "/tests",
-    "/repro_audit.py",
     # the committed benign pools (asi_battery/ and heldout/ are excluded below)
     "/benign_a2a",
     "/benign_longform",

@@ -270,6 +270,29 @@ def test_the_built_sdist_leaves_out_the_maintainer_material(tmp_path):
         "paths and records why; the exclusion did not hold.")
 
 
+def test_the_built_sdist_ships_python_only_under_its_named_roots(tmp_path):
+    """Every .py in the sdist lives under a directory this file names.
+
+    The Python roots of the sdist are the package, the regenerators and the
+    suite (`_MUST_SHIP_DIRS`). A module anywhere else is code no test collects
+    and no regenerator is, which ships to PyPI unowned.
+    """
+    path = _build_sdist(tmp_path)
+    with tarfile.open(path) as tf:
+        members = tf.getnames()
+    inside = [m.split("/", 1)[1] for m in members if "/" in m]
+    assert any(m.endswith(".py") for m in inside), (
+        f"{os.path.basename(path)} carries no .py file at all")
+    loose = sorted(m for m in inside if m.endswith(".py")
+                   and m.split("/", 1)[0] not in _MUST_SHIP_DIRS)
+    assert not loose, (
+        f"Python files outside {_MUST_SHIP_DIRS} reached the built sdist "
+        f"({os.path.basename(path)}):\n  " + "\n  ".join(loose) + "\n"
+        "No test or regenerator owns these, and an upload to PyPI cannot be "
+        "amended. Move the file under one of those roots, or drop it from the "
+        "sdist `include` list in pyproject.toml.")
+
+
 def test_the_wheel_does_not_grow_the_pools(tmp_path):
     """The pools belong in the sdist and nowhere near site-packages.
 

@@ -601,10 +601,10 @@ def test_the_private_stdlib_allowlist_has_no_stale_entries():
 #       one. Between them no job in the matrix is vacuous.
 #
 # Scope is every first-party .py in the repo, derived rather than listed. The
-# sweep has no allowlist to keep in sync, so breadth is free — and three of the
-# four Python roots here (`xaidr`, `scripts`, `tests`, plus `repro_audit.py`)
-# ship inside the sdist, where a file that will not parse on 3.10 is a broken
-# artifact in a 3.10 user's hands with no CI job watching.
+# sweep has no allowlist to keep in sync, so breadth is free — and all three
+# Python roots here (`xaidr`, `scripts`, `tests`) ship inside the sdist, where
+# a file that will not parse on 3.10 is a broken artifact in a 3.10 user's
+# hands with no CI job watching.
 
 _SKIP_DIRS = {"build", "dist", "__pycache__", "node_modules", "site-packages"}
 
