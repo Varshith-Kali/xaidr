@@ -883,9 +883,9 @@ class DelphiSensor:
 
         Returns an ORDINARY ScanResult. There is no new return type and no new
         return path anywhere in this package — see docs/fail-closed-design.md
-        §c. A LangGraph host was crashed in 1.9.0 by a correct verdict sent down
-        a path whose type contract it did not satisfy, and the lesson taken from
-        that is not "be careful with the new type" but "do not add one". This
+        §c. A correct verdict sent down a path whose type contract it does not
+        satisfy crashes a LangGraph host, and the lesson taken from that is not
+        "be careful with the new type" but "do not add one". This
         result flows through exactly the refusal machinery every content block
         already flows through: ``refusal_text``/``_langchain_refusal`` at tool
         seams, ``DelphiBlockedError`` at entrypoint and transport seams.
@@ -1505,11 +1505,10 @@ class DelphiSensor:
     def _breaker_counter_failed(self, counter: str, exc: Exception) -> None:
         """Report a breaker counter that faulted, ONCE, and say what it costs.
 
-        The old message was ``circuit_breaker <name> count failed (<exc>)`` at
-        WARNING, emitted on every single call. Measured against the published
-        1.10.0 wheel, that produced fifty identical lines for fifty delegations,
-        which reads as log noise rather than as a dead control, and it never
-        said the thing an operator needs: that the trigger is now counting
+        A message of the form ``circuit_breaker <name> count failed (<exc>)`` at
+        WARNING, emitted on every single call, produces fifty identical lines
+        for fifty delegations, which reads as log noise rather than as a dead
+        control, and it does not say the thing an operator needs: that the trigger is now counting
         NOTHING and the circuit will not open on it. ``circuit_state`` keeps
         answering ``"closed"`` throughout, which looks like health.
 
@@ -1564,14 +1563,12 @@ class DelphiSensor:
         This mirrors ``_breaker_tool_tick``: separate counter, separate
         threshold, same fail-safe discipline (a fault degrades to "no breaker").
 
-        SHIPPED BROKEN IN 1.10.0 AND EARLIER. This method existed, with this
-        docstring, calling ``record_delegation`` on a runtime that did not
-        implement it. Every outbound ``scan_a2a`` with a breaker configured
-        raised AttributeError, was caught here, logged, and counted nothing, so
-        the fan-out trigger did not exist while appearing to. The method now
-        exists; ``tests/test_delegation_rate_breaker.py`` asserts that every
-        method this file calls on the runtime is implemented, so the class of
-        bug cannot recur silently.
+        A runtime missing ``record_delegation`` would raise AttributeError here,
+        be caught, logged, and count nothing, so the fan-out trigger would be
+        absent while appearing present.
+        ``tests/test_delegation_rate_breaker.py`` asserts that every method this
+        file calls on the runtime is implemented, so that cannot happen
+        silently.
         """
         if self._breaker is None:
             return
@@ -2379,8 +2376,8 @@ class DelphiSensor:
             # SAME Port-1 unicode normalizer the scan() path uses BEFORE L1, so a
             # zero-width / homoglyph-obfuscated command or injection in an arg
             # value ("ignore all previous instructions", homoglyph "rm -rf") is
-            # folded to its canonical form and caught — closing the §11 gap where
-            # the arg path ran raw L1 with no normalizer. Additive: the normalizer
+            # folded to its canonical form and caught, rather than the arg path
+            # running raw L1 with no normalizer. Additive: the normalizer
             # only folds obfuscation, so benign args are unchanged (its partial
             # folding is keyword-gated and never spells a keyword on benign text).
             raw_args = f"{tool_name} {arg_text}"
@@ -3195,16 +3192,15 @@ class DelphiSensor:
                 day protect_tools was written, and the cheapest way to make that
                 recur is to write the verdict twice.
 
-                MERGE NOTE, 1.12.0. Two fixes meet on this line. 1.11.0 split
-                the wrapper by sync/async-ness and factored the decision to
-                here; the audit fix binds arguments to their parameter names
-                before anything classifies them. They are orthogonal — one is
-                about how the tool is INVOKED, the other about how its arguments
-                are NAMED — and they compose in one direction only: bind first,
-                then decide, so both wrappers inherit the binding. Taking either
-                side wholesale would have reintroduced the other's bug, and the
-                case that proves it (an async tool called positionally with a
-                dangerous argument) exists only when both are present.
+                Two concerns meet on this line: the wrapper is split by
+                sync/async-ness with the decision factored to here, and
+                arguments are bound to their parameter names before anything
+                classifies them. They are orthogonal — one is about how the
+                tool is INVOKED, the other about how its arguments are NAMED —
+                and they compose in one direction only: bind first, then
+                decide, so both wrappers inherit the binding. The case that
+                needs both is an async tool called positionally with a
+                dangerous argument.
                 """
                 arguments = bind_arguments(orig_func, tname, args, kwargs)
                 # scan_tool_call applies blocked-tools + L1 arg scan +
@@ -3256,9 +3252,10 @@ class DelphiSensor:
                     so a correctly-refused call raises
                     `ValueError: a coroutine was expected` in the host. Measured
                     on a plain `async def` tool before this change. That is the
-                    same class of defect as the LangGraph ToolMessage bug in
-                    1.9.0: the refusal was right and its TYPE was not, so
-                    enforcement crashed the caller instead of stopping it.
+                    same class of defect as a `str` refusal where LangGraph
+                    expects a ToolMessage: the refusal is right and its TYPE is
+                    not, so enforcement crashes the caller instead of stopping
+                    it.
 
                 The refusal VALUE is identical on both paths, so anything
                 matching on `[BLOCKED]` / `[APPROVAL REQUIRED]` reads the same

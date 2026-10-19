@@ -45,7 +45,8 @@ partition that makes each group independently safe to enable:
 
 WHAT EACH GROUP RETURNS is deliberately NOT a new type. See
 ``docs/fail-closed-design.md`` §c: a correct verdict travelling a return path
-whose contract it did not satisfy is what crashed a LangGraph host in 1.9.0.
+whose contract it does not satisfy crashes the host (a LangGraph tool node, for
+one, requires a ToolMessage).
 A fail-closed decision produces an ordinary :class:`ScanResult` with
 ``action="blocked"`` (or ``"approval_required"``) and rides the refusal path
 each boundary already has — ``refusal_text``/``_langchain_refusal`` at tool

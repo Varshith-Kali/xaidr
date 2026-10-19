@@ -1,12 +1,12 @@
 """xaidr.value_origin — where a tool call's destination came from.
 
-The core of docs/value-origin-architecture.md (delphi-sentinel), built ONCE here
-and vendored byte-identically by paid at a pinned commit. Pure: no seams, no
+The value-origin core, built ONCE here and vendored byte-identically by its
+consumers at a pinned commit. Pure: no seams, no
 I/O, no network, no dependency outside the standard library and this package
 (tests/value_origin_conformance/test_self_contained.py enforces that).
 
-``__all__`` IS the interface (§1). Paid imports nothing else; changing it is a
-breaking change to paid and is called out as one in the PR that makes it.
+``__all__`` IS the interface. Consumers import nothing else; changing it is a
+breaking change and is called out as one in the PR that makes it.
 Deliberately absent: any accessor that returns ledger contents, any way to write
 an origin directly, any function that takes a correlation id — each is a
 laundering or disclosure primitive.

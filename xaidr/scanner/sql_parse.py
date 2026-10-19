@@ -70,11 +70,10 @@ MAX_STATEMENTS = 32
 # Every bound in this module is a place where the parser stops. A bound that
 # DROPS what it did not reach reports the same thing as an input that contained
 # nothing: a caller cannot tell "there was no DELETE" from "we stopped before the
-# DELETE". Both of those bypasses were measured on 1.12.0-rc, one by padding past
-# MAX_SQL_CHARS and one by preceding the payload with MAX_STATEMENTS harmless
-# statements; in both the destructive statement ran.
+# DELETE", whether the payload sits past MAX_SQL_CHARS or behind MAX_STATEMENTS
+# harmless statements.
 #
-# So every bound now emits this shape IN ADDITION to whatever it did manage to
+# So every bound emits this shape IN ADDITION to whatever it did manage to
 # parse, and `sql.unparsed_input` in impact-classes.json gates it. The shape is
 # deliberately NOT a fabricated DELETE: it says "a SQL value exceeded what this
 # parser can read", which is true, and the rule that gates it says why. The

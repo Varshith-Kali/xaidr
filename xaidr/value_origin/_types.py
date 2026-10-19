@@ -1,7 +1,7 @@
 """The value-origin core's enums, value types and constants (§1.1-§1.3).
 
-Every name here is part of the interface paid vendors. Changing one is a
-breaking change to paid and is called out in the PR that makes it (§4.5).
+Every name here is part of the vendored interface. Changing one is a
+breaking change and is called out in the PR that makes it.
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ class WireValue(str, enum.Enum):
 
 
 class RowState(str, enum.Enum):
-    """Exactly blank-canvas StageState's spellings."""
+    """Row-state spellings. Fixed: consumers of the row table match them exactly."""
 
     DECIDED = "decided"
     RAN_EVIDENCE = "ran_evidence"

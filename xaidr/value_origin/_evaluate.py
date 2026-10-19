@@ -35,8 +35,8 @@ _VERDICT = {
 
 def verdict_of(wire: WireValue) -> Verdict:
     """Total over the nine wire values (V-3). ``CallVerdict.verdict`` is always
-    ``verdict_of(wire)``; paid's L2 driver and the Brain derive the verdict
-    from the wire value only through this function. Never raises: a string
+    ``verdict_of(wire)``; consumers derive the verdict from the wire value
+    only through this function. Never raises: a string
     outside the nine is NOT_EVALUATED, matching ``row_text``'s not_recorded row
     for an unrecognised value."""
     try:
@@ -54,8 +54,8 @@ def should_block(verdict: CallVerdict, *, mode: Mode) -> bool:
         return False
 
 
-# §3.4, normative. The Brain's src/value-origin.ts and blank-canvas's waterfall
-# are checked against a JSON export of this table (row_text.json).
+# Normative. Other implementations of this table are checked against a JSON
+# export of it (row_text.json).
 _ROWS = {
     "no_flow": (RowState.NOT_RECORDED,
                 "Intent: not evaluated — no flow context was visible to this call "

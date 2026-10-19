@@ -373,9 +373,9 @@ def _patch_langchain_core(ctx: PatchContext) -> None:
                 f"policy ({verdict.category or 'policy'})."
             )
             # The refusal goes back through the SAME type discrimination the
-            # before path uses. A new return path is a new chance to repeat
-            # 1.9.0 — a correct verdict delivered as a `str` where a ToolMessage
-            # was promised crashed a LangGraph host — and `kwargs` carries the
+            # before path uses. A new return path is a new chance to deliver a
+            # correct verdict as a `str` where a ToolMessage was promised, which
+            # crashes a LangGraph host — and `kwargs` carries the
             # `tool_call_id` here exactly as it does on the way in.
             return _langchain_refusal(message, name, kwargs)
 
@@ -1040,15 +1040,13 @@ def _patch_mcp(ctx: PatchContext) -> None:
             # An MCP server's RESULT is untrusted inbound content — tool-result
             # poisoning is the headline MCP attack, so it is scanned.
             #
-            # `direction="tool_result"`, NOT "input". This scanned as "input"
-            # until 1.20.0, which made a value a server RETURNED
-            # indistinguishable at the type level from a value a principal
-            # SUPPLIED — the strongest and the weakest provenance in the estate
+            # `direction="tool_result"`, NOT "input". Scanning it as "input"
+            # would make a value a server RETURNED indistinguishable at the
+            # type level from a value a principal SUPPLIED — the strongest and the weakest provenance in the estate
             # sharing one label, on the surface where the difference matters
             # most. Detection is unchanged (`_INBOUND_CHAT_DIRECTIONS` in
-            # scanner/local.py keeps the two labels one pipeline); what changes
-            # is that telemetry, and any extension's `ScanRequest`, can now tell
-            # them apart.
+            # scanner/local.py keeps the two labels one pipeline); telemetry,
+            # and any extension's `ScanRequest`, can tell them apart.
             text = _mcp_result_text(result)
             if not text:
                 return result
