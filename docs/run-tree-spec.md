@@ -1,7 +1,11 @@
 # Run-tree capture: design spec (8 Oct sensor build list, item 1)
 
-Status: **design only, for Ani's decisions.** No sensor code was changed in this
-loop. The next loop builds it.
+Status: **built** on branch `feat/run-tree` (2026-10-19), per Ani's rulings:
+Q-R1 = M2 (wrap the public `configure` classmethods), D1 = A, D2 = D, D3 = A with
+D3b, D4 as proposed. Sections below record the design as written for those
+decisions. Where the build proved a statement false, the statement is marked
+**[CORRECTED 2026-10-19]** in place rather than silently rewritten. §8 lists what
+the build found that this spec did not anticipate.
 
 Base: `0502c99`, which equals `origin/main` as fetched 2026-10-18. Every xaidr
 `file:line` below is at that commit. Evidence produced in this loop is in
@@ -197,7 +201,10 @@ events never carry it), and `nano*`.
   adds `DelphiSensor._enqueue_event`, through which "every telemetry event this
   sensor emits passes" (that branch's `sensor.py:2474`), and bumps `SCHEMA_VERSION`
   to `0.3.0` for `valueOrigin`. Whichever of the two builds lands second rebases onto
-  the other's funnel. §4.3 assumes that funnel.
+  the other's funnel. §4.3 assumes that funnel. **[CORRECTED 2026-10-19]** Ani
+  ruled that run-tree lands first, so `feat/run-tree` adds `_enqueue_event` and
+  routes all 10 sites through it; `feat/value-origin-seams` rebases onto that
+  funnel and adds its `valueOrigin` step inside it.
 
 ### 2d. The Brain side today (`delphi-sentinel` `origin/main` `01450c7`)
 
@@ -375,9 +382,9 @@ the wire shape does not change if D1 widens. `schema.py` maps them to
 |---|---|
 | LangChain is not imported, or the attach module is not in `sys.modules` | The target is `not_present`, or `found_unpatchable` with "call `protect()` again after importing your graph". No `run*` keys on any event. |
 | An unrecognised `configure` shape (not a classmethod, moved) | `PatchUnavailable` → `found_unpatchable`, loud, as every other seam. No keys. |
-| An event outside any runnable (direct SDK call, direct `tool.run`: V3) | `runTree: "no_run"`. No ids (D2). |
+| An event outside any runnable (direct SDK call, direct `tool.run`: V3) | `runTree: "no_run"`. No ids (D2). **[CORRECTED 2026-10-19]** Exact only from Python 3.11. Before 3.11 a missing run config does not establish "outside any run" (§8), so while any run is live such an event reports `unknown_run`. Still no ids. |
 | The enclosing run is not in the index (started before `protect()`, or evicted by the cap) | `runTree: "unknown_run"`. No ids. **Never** a guessed root (see below). |
-| Two roots share a `run_id` (a user-supplied `config["run_id"]` reused while live) | `runTree: "collision"`. No ids for either until both end. |
+| Two roots share a `run_id` (a user-supplied `config["run_id"]` reused while live) | `runTree: "collision"`. No ids for either until both end. **[CORRECTED 2026-10-19] "until both end" was the wrong rule, and the first build implemented it.** A fresh-context review showed two merges against real LangChain. (1) A reused CHILD id marked only the newcomer's root collided, so the first flow kept `stamped` and both flows shared its root. (2) Once the first flow ended, the collided flag went with it, and a third flow reusing the id was stamped while the second was still live. The rule now: a run id is a flow key only the first time it is seen. Any reuse (live, recently ended or evicted, already collided; root or child) taints the id and marks every root it touches, and a tainted id resolves to `collision` from then on (§8). |
 | Any exception in the handler or the stamp | Swallowed. A fault counter is incremented, the exception **type** is logged once, the event gets `runTree: "fault"`, and the event is otherwise emitted unchanged. |
 
 There is a direction to the risk, and the table follows it. A **split** flow (one
@@ -396,7 +403,7 @@ the nearest plausible root.
 | `runNodePath` | ≤ 8 names | nesting deeper than 8 subgraphs is truncated from the root side and marked |
 | Node names | ≤ 128 chars each | node names are user-supplied strings |
 | Ids | `str(uuid)`; anything else is rejected → `unknown_run` | `run_id` is user-suppliable |
-| Per-callback work | O(1): one dict read and one insert, under a lock | — |
+| Per-callback work | O(1): one dict read and one insert, under a lock | — **[CORRECTED 2026-10-19]** Except a root's end or eviction, which is linear in the runs still filed under that root, so bounded by the cap. |
 | Per-stamp work | O(1): one ContextVar read, one dict read, one counter increment | — |
 
 ### 4.7 Install, uninstall, idempotency
@@ -558,7 +565,12 @@ Sub-decisions:
   nothing will have something to carry, and the event type can be designed against
   real cases.
 - Coordinate the `SCHEMA_VERSION` bump with `feat/value-origin-seams` (`0.3.0`
-  there), whichever lands first.
+  there), whichever lands first. **[CORRECTED 2026-10-19] False: there is no bump
+  to coordinate.** This repo's rule, pinned by
+  `tests/test_audit_f9_tool_telemetry.py::test_schema_version_did_not_move_for_this_change`,
+  is that additive keys do not move `SCHEMA_VERSION` and a changed meaning does.
+  The `run*` keys and `gen_ai.tool.call.id` are additive, so run-tree keeps
+  `0.2.0`. Whether `valueOrigin` moves it is that branch's own question.
 
 **What would change it:** a Brain consumer that needs runs with no scan event in v1.
 That is C, built together with item 2.
@@ -571,7 +583,7 @@ Proposed ceilings, against what was measured:
 |---|---|---|
 | Stamp, per event | **≤ 10 µs p99** | median 1.3–1.8 µs, max 6.0 µs, over 68 events (V6). That is about 0.3–0.4% of the median scan (0.43 ms, `docs/performance.md:10`). |
 | Handler, per callback | **≤ 10 µs p99** | Below this benchmark's resolution. 5 of 7 runs fell between +0.4% and +2.3% of a ~1.4 ms invoke at 11 callbacks per invoke (≤ ~3 µs per callback). The outliers were −7.1% and +9.9%, at load average ~7.8 (`bench_handler_output.txt`). A quieter machine or more rounds is needed to resolve it. |
-| Memory | **≤ 2 MB** at the 4096-entry cap | ~76 B per entry for a 2-field prototype entry. The design's 4-field entry is not measured, and the 2 MB figure is an estimate. |
+| Memory | **≤ 2 MB** at the 4096-entry cap | ~76 B per entry for a 2-field prototype entry. The design's 4-field entry is not measured, and the 2 MB figure is an estimate. **[CORRECTED 2026-10-19] Measured on the build:** about 1.4 MB retained at the cap after 50k flows, a third of them abandoned (`test_d4_budget_index_stays_under_2mb_with_many_flows`). **[CORRECTED AGAIN 2026-10-19] That figure undercounted.** It counted only allocations made in `run_tree.py`, which left out the UUIDs and node names only the index kept alive. Counted across all files, the same workload was 1.94 MB, and a root-only abandoned workload was 2.52 MB, over budget. The index now keys by `uuid.int` and keeps root state on the root's own entry. The gate counts every file over three workloads: mixed 1759 KiB, root-only abandoned 1248 KiB, reuse storm 752 KiB (`docs/run-tree-evidence/implementation/budget_runs.txt`). |
 | Per-callback and per-stamp work | O(1), no tree walk (§4.2) | the prototype walked the tree (≤ 3 hops here) |
 
 The guarantees, stated against the canonicalizer's contract
@@ -634,8 +646,12 @@ skipped.
 ## 7. Not measured, and open
 
 - **The CI pins** (langchain-core 1.6.1 and friends): neither M1 nor M2 was run there.
+  **[CORRECTED 2026-10-19]** M2 is now run there, on Python 3.12 and 3.10. CI runs
+  the tree; a run from the built wheel was done by hand, and its output is in
+  `docs/run-tree-evidence/implementation/wheel_pins.txt` (§8).
 - **An async `create_agent`, streaming, and `Send`/map-reduce fan-out:** not
-  exercised. A `Send` fan-out runs several node tasks under one parent at the same
+  exercised. **[CORRECTED 2026-10-19]** An async `create_agent` is now exercised
+  (§8). Streaming and `Send` fan-out are still not. A `Send` fan-out runs several node tasks under one parent at the same
   step. The design stamps each with its own task run, but that is not measured.
 - **The outer-node path** (`runNodePath`) is inferred from the hop count, not
   printed (§3).
@@ -645,3 +661,48 @@ skipped.
 - **Whether the paid SDK's `parentScanId` ContextVar survives LangGraph's node
   boundary** (§2d): not measured.
 - **The handler's per-callback cost:** below this benchmark's resolution (D4).
+
+---
+
+## 8. What the build found (2026-10-19)
+
+- **Python < 3.11 cannot place async events.** LangChain sets the run config in a
+  copied context and hands it to async code only through
+  `asyncio.create_task(context=...)`, which Python added in 3.11
+  (`langchain_core.runnables.utils.asyncio_accepts_context`). On 3.10 the handler
+  still sees every run, but an async node (and any sync tool it dispatches to an
+  executor thread) runs without the config. Those events report `unknown_run`,
+  never `no_run` and never a root (`_unplaceable` in `xaidr/run_tree.py`; asserted by
+  `test_py310_async_events_are_unplaceable_never_rooted`, run by the new
+  `run-tree-py310` CI job). The async legs are strict-xfail below 3.11.
+- **An async `create_agent` under the injected middleware crashes at the first tool
+  call**, at the CI pins and at the latest versions alike:
+  `NotImplementedError: Asynchronous implementation of awrap_tool_call is not
+  available`. This predates run-tree (`d38486a`). It is pinned as a strict xfail
+  (`test_async_create_agent_with_injected_middleware_is_stamped`) that turns red
+  once `awrap_tool_call` lands. An async `create_agent` bound before `protect()`
+  (no middleware) runs, and is stamped.
+- **The stamp is activated through `install_registry_hook("xaidr.run_tree", …)`,**
+  not a bare teardown, so the manifest keeps one restored entry per patched record
+  (`tests/test_protect_manifest.py` pins that invariant).
+- **`toolCallId` rides a ContextVar** that the two tool seams bind around their
+  scan call (`run_tree.bind_tool_call_id`). No public scan signature changed.
+- **`toolCallId` is unique only within a flow.** In the outside-the-process run,
+  two concurrent flows both produced `call_1`. The join from a `tool_result` to
+  its `tool_call` is therefore on `(runRootId, toolCallId)`, never on
+  `toolCallId` alone.
+- **Run-id reuse merged flows in the first build; a fresh-context review found
+  it.** See the correction in §4.5. Both orderings are now asserted against real
+  LangChain (`test_t2_a_reused_child_run_id_in_two_concurrent_flows_never_merges`,
+  `test_t2_a_collided_root_id_stays_collided_after_the_first_flow_ends`) and,
+  deterministically, at the index level for every ordering the review named
+  (`test_t2_index_*`). One limit remains: the memo of ended ids is bounded, so
+  a reuse that comes after the memo has rotated past it is treated as a fresh
+  id.
+- **A handler attached before `unprotect()` keeps receiving callbacks** for runs
+  already in flight. It now does nothing while the stamp is inactive
+  (`test_t5_unprotect_stops_indexing_runs_already_in_flight`).
+- **`no_run` means "no run config reached the emit point"**, not strictly
+  "outside every run". From 3.11 a thread the host starts without copying its
+  context also reports it. It still carries no ids.
+
