@@ -55,10 +55,12 @@ from .extensions import DestinationView, ScanRequest, SensorExtension
 from .reporters import Reporter, safe_fault
 from .scanner.a2a_structural import A2AStructuralValidator, A2AIdTracker
 from .scanner.command_parse import reconstruct as _reconstruct_command
+from .scanner.canonicalize import canonicalize as _canonicalize
 from .scanner.privilege_action import scan_privileged_action as _privilege_findings
 from .scanner.resource_bound import scan_resource_bounds as _resource_findings
 from .scanner.dlp import (
     HIGH_CONFIDENCE_SECRET_CATEGORIES as _HIGH_CONFIDENCE_SECRETS,
+    SIGNAL_ONLY_SECRET_RULES as _SIGNAL_ONLY_SECRETS,
     scan_dlp as _scan_dlp,
 )
 from .scanner.l1 import scan_l1 as _scan_l1
@@ -379,6 +381,14 @@ _TOOL_ARG_FLAG_CATEGORIES = frozenset({
     "privileged_action",
     # Admitted by the measurement above. FLAG, never BLOCK.
     "asi01", "asi05", "asi06", "asi07", "asi09",
+    # An unresolvable shell construct the canonicalization stage could not
+    # resolve statically (an env/unknown variable in the verb or target slot, an
+    # in-line IFS reassignment with no destructive command). FLAG, never BLOCK:
+    # a plain `$CMD args` or `rm -rf "$VAR"` is the developer pattern, not an
+    # attack, so it surfaces for review and POLICY remains the block layer. The
+    # destructive-substitution case is block-tier and carries code_execution, so
+    # it is deliberately NOT here. See scanner.canonicalize.
+    "shell_unresolved",
 })
 
 # The KEEP filter for the tool-argument L1 scan: a threat in neither tier is
@@ -2400,9 +2410,10 @@ class DelphiSensor:
             # The parser already collapses that (shlex resolves `e''nv` to `env`),
             # but only CLASSIFICATION used the parse. Scanning the parser's
             # canonical reconstruction through the SAME rules closes the whole
-            # quote/`$IFS`/empty-string obfuscation family without adding a single
-            # new evasion pattern — the tokenizer generalises where a regex list
-            # cannot.
+            # quote/empty-string obfuscation family without adding a single new
+            # evasion pattern — the tokenizer generalises where a regex list
+            # cannot. Shell expansion (`$IFS` word-splitting, variables,
+            # substitutions) is the canonicalization stage's, below.
             #
             # MAX-fused: this only ADDS threats to `danger`, and the block decision
             # below is unchanged, so a reconstruction can never LOWER a verdict.
@@ -2435,6 +2446,44 @@ class DelphiSensor:
                         continue
                     danger.append(_StructuralThreat(
                         rule=f["rule"], category=f["impact_class"], score=f["score"]
+                    ))
+
+                # CANONICALIZATION STAGE (normalize, then classify). Everything
+                # above reads the string the model PRODUCED; the shell rewrites
+                # that string before it runs (joins `$IFS`-separated words,
+                # substitutes an in-line literal variable). This applies the
+                # deterministic, non-executing rewrites and runs the canonical
+                # form through the SAME classifier, so a `$IFS`/literal-variable
+                # spelling is the same fact as its plain form. A command
+                # substitution or an unresolved variable is DETECTED, never
+                # executed (D5): its verdict comes from `canonical.findings`
+                # below, following the D1/D5 table. Additive, so this can only
+                # raise a verdict; keyed by language so SQL and URL reuse the seam.
+                canonical = _canonicalize(shell_command, "shell")
+                if canonical.text and canonical.text != shell_command:
+                    canon_rebuilt = _reconstruct_command(canonical.text) or canonical.text
+                    canon_rebuilt = self._arg_normalizer().normalize(canon_rebuilt)
+                    danger.extend(
+                        t for t in _scan_l1(canon_rebuilt[:_L1_MAX_SCAN_CHARS]).threats
+                        if t.category in _TOOL_ARG_KEEP_CATEGORIES
+                        and t.rule not in {x.rule for x in danger}
+                    )
+                    for f in _command_findings(canonical.text):
+                        if f["rule"] in {x.rule for x in danger}:
+                            continue
+                        danger.append(_StructuralThreat(
+                            rule=f["rule"], category=f["impact_class"], score=f["score"]
+                        ))
+                # Verdicts for constructs the stage could not resolve statically
+                # (substitution in a destructive position → block; unresolved
+                # verb/target, in-line IFS reassignment → flag). Block-tier
+                # findings carry an enforcing category; flag-tier carry
+                # `shell_unresolved`, which never blocks on its own.
+                for f in canonical.findings:
+                    if f["rule"] in {x.rule for x in danger}:
+                        continue
+                    danger.append(_StructuralThreat(
+                        rule=f["rule"], category=f["category"], score=f["score"]
                     ))
 
             # STRUCTURAL findings from SQL in an argument value. Deliberately
@@ -2598,16 +2647,37 @@ class DelphiSensor:
             # FILTERED here, matching the existing rule for the L1 categories above,
             # and only `secret_*` enforces.
             #
-            # Within secrets, only the HIGH-confidence categories block;
-            # `secret_password` matches ordinary prose ("reset your password:
-            # instructions at …") and is signal-only. See dlp.py for the taxonomy —
-            # it lives beside the patterns so a new pattern cannot inherit an
-            # enforcement decision nobody made.
+            # Within secrets, only the HIGH-confidence categories block, and not
+            # the entries in SIGNAL_ONLY_SECRET_RULES: those are RECORDED (rule
+            # id, score, `flagged`) and never block, by ruling (a Stripe test
+            # key, an unlisted key name). `secret_password` matches ordinary
+            # prose ("reset your password: instructions at …") and is filtered
+            # out here. See dlp.py for the taxonomy — it lives beside the
+            # patterns so a new pattern cannot inherit an enforcement decision
+            # nobody made.
+            #
+            # The value is also read in its canonical "string" form (quoted
+            # literals joined, base64 runs decoded; see scanner.canonicalize) and
+            # that form runs through the SAME table. A credential is matched on
+            # its value however the argument spells it, and gets exactly the
+            # verdict, rule id and score its inline form gets. Additive: hits on
+            # the canonical form only extend the raw ones.
             if self._scanner.dlp_enabled and arg_text.strip():
+                dlp_text = arg_text[:_L1_MAX_SCAN_CHARS]
+                dlp_threats = _scan_dlp(dlp_text).threats
+                canon_value = _canonicalize(dlp_text, "string").text
+                if canon_value != dlp_text:
+                    seen = {t.rule for t in dlp_threats}
+                    dlp_threats = dlp_threats + [
+                        t for t in _scan_dlp(canon_value[:_L1_MAX_SCAN_CHARS]).threats
+                        if t.rule not in seen
+                    ]
                 dlp_hits = [
-                    t for t in _scan_dlp(arg_text[:_L1_MAX_SCAN_CHARS]).threats
+                    t for t in dlp_threats
                     if t.category in _HIGH_CONFIDENCE_SECRETS
+                    and t.rule not in _SIGNAL_ONLY_SECRETS
                 ]
+                dlp_signals = [t for t in dlp_threats if t.rule in _SIGNAL_ONLY_SECRETS]
                 if dlp_hits:
                     score = max(score, max(t.score for t in dlp_hits))
                     category = category or dlp_hits[0].category
@@ -2615,6 +2685,12 @@ class DelphiSensor:
                     if self.enforcement.enforces():
                         action = "blocked"
                     elif action == "allowed":
+                        action = "flagged"
+                if dlp_signals:
+                    score = max(score, max(t.score for t in dlp_signals))
+                    category = category or dlp_signals[0].category
+                    rules = rules + [t.rule for t in dlp_signals if t.rule not in rules]
+                    if action == "allowed":
                         action = "flagged"
 
             # Over-length arg content is itself anomalous — flag-default (never a

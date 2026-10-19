@@ -185,7 +185,9 @@ INPUT_PROBES = {
 }
 
 OUTPUT_PROBES = {
-    "out": "your api key is sk-ant-0123456789abcdefghijklmnop",
+    # Answered by OUT_secret_credential, an output L1 rule. Provider-token
+    # shapes live in DLP_PATTERNS (both seams run it), not in the L1 table.
+    "out": "your password is hunter2hunter2",
     "social_engineering": "verify your account now at https://acct-verify.example.com",
 }
 

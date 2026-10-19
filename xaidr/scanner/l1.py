@@ -84,6 +84,12 @@ _KNOWN_L1_CATEGORIES = frozenset({
     # flood rules and already a recognised FLAG-tier tool-argument category, so
     # it needs no entry of its own.
     "privileged_action",
+    # scanner.canonicalize emits this on the tool path for a shell construct it
+    # could not resolve statically (an env/unknown variable in the verb or
+    # target slot, an in-line IFS reassignment with no destructive command).
+    # FLAG-tier (see sensor._TOOL_ARG_FLAG_CATEGORIES); the destructive
+    # substitution case blocks under code_execution, not this.
+    "shell_unresolved",
 })
 
 

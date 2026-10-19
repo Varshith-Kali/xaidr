@@ -47,6 +47,7 @@ import time
 import pytest
 
 from xaidr.scanner import l1 as L1
+from xaidr.scanner.dlp import DLP_PATTERNS
 from xaidr.scanner.repetition import find_phrase_repeat
 from xaidr.sensor import DelphiSensor
 
@@ -124,7 +125,11 @@ def _battery_common(n: int) -> dict:
 AUDIT_N = 20_000
 PER_PATTERN_CEILING_SEC = 0.25
 
-ALL_RULES = list(L1.INPUT_RULES) + list(L1.OUTPUT_RULES)
+# DLP_PATTERNS is in the set because both seams run it: the provider-token
+# shapes that used to be output rules live there now, and leaving the table out
+# would have taken them out of this audit by moving them.
+ALL_RULES = (list(L1.INPUT_RULES) + list(L1.OUTPUT_RULES)
+             + [dict(p, detector=None) for p in DLP_PATTERNS])
 
 
 def _run(rule, text: str) -> float:
