@@ -160,8 +160,9 @@ _ADMIN = re.compile(r"\b(org-?admin|super-?user|superuser|root|administrator|adm
 # escalation under a ROLE or PERMISSION slot, where it is MongoDB's built-in
 # `root` role and not a node. And it stays one in a scope LIST: a position slot
 # holds exactly ONE position, so `scopes: "read-only,root"` is not a caller
-# saying where in a tree it is working, it is a token being widened — which is
-# the F4b shape (`tests/test_sep10_high_findings.py`) and it must keep firing.
+# saying where in a tree it is working, it is a token being widened. A
+# read-only word in a scope list excuses only its own entry, never an admin
+# entry beside it, so that call must keep firing.
 # Hence the `len(scopes) == 1` requirement: the carve-out reaches `scope: "root"`
 # alone and nothing else.
 _ROOT_TOKEN = re.compile(r"^root$", re.I)

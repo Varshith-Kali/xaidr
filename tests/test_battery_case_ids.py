@@ -27,9 +27,9 @@ lookup raises. Prose does not raise.
 
 WHAT IS AND IS NOT ALLOWED. A citation of a dead id is legitimate when it is
 FRAMED AS HISTORY — "`ASI09-A01..A12` became `ASI06-A13..A24`", "`ASI06-B17`
-was `ASI09-B05` before F9", the case-id map. That framing is what makes it a
-record rather than a stale claim, and the battery README's case-id map is
-largely made of it. So the
+was `ASI09-B05` before the relabelling", the case-id map. That framing is what
+makes it a record rather than a stale claim, and the battery README's case-id
+map is largely made of it. So the
 gate requires a historical marker on the citing line or its enclosing markdown
 section, and fails on a BARE dead id — which is exactly what both defects were.
 

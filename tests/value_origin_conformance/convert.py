@@ -286,7 +286,7 @@ def main(argv=None) -> int:
     dump("expected.jsonl", expected)
     dump("oracle.jsonl", oracle)
     src.write_text(json.dumps({
-        "repo": "github.com/delphisecurity/delphi-sentinel",
+        "repo": "Delphi internal reference implementation",
         "commit": commit,
         "inputs": {n: {"path": f"{CORPUS_DIR}/{n}", "sha256": s} for n, s in shas.items()},
         "cases": len(cases),

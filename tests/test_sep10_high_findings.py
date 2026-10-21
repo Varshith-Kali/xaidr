@@ -25,7 +25,7 @@ def _rules(args, tool="grant_role"):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# F4a. A SUPPRESSOR MUST BE A SIBLING
+# A SUPPRESSOR MUST BE A SIBLING
 # ═══════════════════════════════════════════════════════════════════════════
 #
 # `_FILTER_KEYS` holds fourteen of the commonest key names in any API — `state`,
@@ -62,7 +62,7 @@ def test_a_filter_or_governance_key_in_the_SAME_record_still_excuses_it(args):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# F4b. A READ-ONLY WORD EXCUSES ITS OWN SCOPE, NOT THE STRING
+# A READ-ONLY WORD EXCUSES ITS OWN SCOPE, NOT THE STRING
 # ═══════════════════════════════════════════════════════════════════════════
 
 @pytest.mark.parametrize("value", [
@@ -96,7 +96,7 @@ def test_the_battery_widening_shape_still_fires():
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# F4c. camelCase IS THE SAME KEY
+# camelCase IS THE SAME KEY
 # ═══════════════════════════════════════════════════════════════════════════
 
 @pytest.mark.parametrize("camel, snake, rule", [
@@ -135,7 +135,7 @@ def test_the_1_14_1_false_positives_stay_silent(tool, args):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# F3. A SECOND SENSOR MUST NOT INHERIT THE FIRST SENSOR'S WRAPPER
+# A SECOND SENSOR MUST NOT INHERIT THE FIRST SENSOR'S WRAPPER
 # ═══════════════════════════════════════════════════════════════════════════
 #
 # This is the staged rollout docs/rollout.md recommends, in two lines: run in
