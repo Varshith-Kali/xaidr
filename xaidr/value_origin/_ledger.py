@@ -1,9 +1,9 @@
 """The flow-scoped ledger: binding, the write rule, key provenance, the cap.
 
-THE STORE (§0 settled 1). One mutable ledger per flow, held in a ContextVar and
+THE STORE. One mutable ledger per flow, held in a ContextVar and
 bound once at flow entry. Writes are mutations of that ledger, never a re-set of
-the ContextVar, so sibling tasks that share a flow share its ledger (C-16 row N)
-and concurrent flows that each bound their own do not (row P).
+the ContextVar, so sibling tasks that share a flow share its ledger,
+and concurrent flows that each bound their own do not.
 
 BINDING (ruling 3.1). A ledger is EXPLICIT or IMPLICIT (an internal attribute):
 
@@ -15,14 +15,14 @@ BINDING (ruling 3.1). A ledger is EXPLICIT or IMPLICIT (an internal attribute):
     unbind_ledger()            clear_flow
 
 An implicit ledger lives for one request. Replacing it at the next input scan
-is the V-27 fix: a thread-reusing server that never begins a flow must not carry
+keeps authority per request: a thread-reusing server that never begins a flow must not carry
 user A's principal authority into user B's request.
 
-WHAT IS STORED (C-12). ``HMAC-SHA256(k, authority.key())`` and the same for
+WHAT IS STORED. ``HMAC-SHA256(k, authority.key())`` and the same for
 principal n-grams, ``k`` 32 random bytes drawn once per process. Nothing here can
 be reversed, and digests are not comparable across processes, by design.
 
-THE WRITE RULE (C-18, ruled 2026-09-24), one compound operation per authority,
+THE WRITE RULE, one compound operation per authority,
 under the lock:
 
     existing                 new emission              result
@@ -34,10 +34,10 @@ under the lock:
     trusted                  untrusted                 unchanged — nothing lowers
 
 A principal emission is a candidate from a ``Writer.PRINCIPAL`` span of an input
-whose scan was clean (``input_clean is True``, V-9). A flagged input records
+whose scan was clean (``input_clean is True``). A flagged input records
 every candidate untrusted and NO n-grams (ruling 3.5).
 
-THE LOCK (C-15, D4). One ``threading.Lock`` per ledger. First-emission-wins is
+THE LOCK. One ``threading.Lock`` per ledger. First-emission-wins is
 check-then-set, which races under the GIL too, and the raise makes every write a
 compare-then-set, so no single atomic dict operation implements it. Every
 compound operation — each write unit, a read's trust decision together with its
@@ -48,11 +48,11 @@ core has no ``async`` function, so it is never held across an ``await``. After
 ``fork()`` a ledger from another pid counts as not bound, checked BEFORE the
 lock is touched, so a child never waits on a lock held mid-write in the parent.
 
-THE CAP (C-14, V-16). 10,000 digests per ledger, n-grams included. Each write
+THE CAP. 10,000 digests per ledger, n-grams included. Each write
 unit is all-or-none; a unit that would exceed the cap is dropped whole and the
 ledger becomes SATURATED — "saturated" means a drop has occurred, not that the
 ledger is full. ``record_principal_input`` writes two units in order, its
-destinations and then its n-grams (V-16(d), settled 2026-09-24), so a long
+destinations and then its n-grams, so a long
 prompt's n-grams can be dropped without dropping the principal's addresses.
 """
 from __future__ import annotations
@@ -83,8 +83,8 @@ _log = logging.getLogger("xaidr.value_origin")
 
 _KEY = secrets.token_bytes(32)
 
-# The lock factory, a module attribute so the D4 proof can remove the lock
-# from the REAL core (tests/value_origin_conformance, R4).
+# The lock factory, a module attribute so the race test can remove the lock
+# from the REAL core (tests/value_origin_conformance/test_race.py).
 _new_lock = threading.Lock
 
 Entry = Tuple[Origin, bool, Optional[str]]      # (origin, span_declared, source_label)
@@ -112,7 +112,7 @@ class _Ledger:
         self.saturated = False
         self.sat_logged = False
 
-    def __repr__(self) -> str:                  # discloses nothing (C-12)
+    def __repr__(self) -> str:                  # discloses nothing
         return (f"<value-origin ledger {'explicit' if self.explicit else 'implicit'} "
                 f"{len(self.entries) + len(self.ngrams)} digests>")
 
@@ -122,7 +122,7 @@ _LEDGER: ContextVar[Optional[_Ledger]] = ContextVar("xaidr_value_origin_ledger",
 
 def _current() -> Optional[_Ledger]:
     lg = _LEDGER.get()
-    if lg is None or lg.pid != os.getpid():     # V-32: another pid's ledger is not bound
+    if lg is None or lg.pid != os.getpid():     # another pid's ledger is not bound
         return None
     return lg
 
@@ -171,9 +171,9 @@ def _bind_for_input() -> _Ledger:
     return lg
 
 
-# ── the write rule (C-18) ────────────────────────────────────────────────────
+# ── the write rule ───────────────────────────────────────────────────────────
 def _merge(old: Optional[Entry], new: Entry) -> Entry:
-    """The C-18 table, for one authority. Returns the entry to store."""
+    """The write-rule table (module docstring), for one authority. Returns the entry to store."""
     if old is None:
         return new
     if old[0] is Origin.PRINCIPAL:
@@ -217,7 +217,7 @@ def _log_saturation_once(lg: _Ledger) -> None:
 
 # ── principal input ──────────────────────────────────────────────────────────
 def _principal_clean(input_clean: Optional[bool]) -> bool:
-    """V-9: only an input whose pre-mode scan verdict was ``allowed`` donates
+    """Only an input whose pre-mode scan verdict was ``allowed`` donates
     principal authority. ``False`` (flagged/blocked/approval) and ``None`` (no
     verdict earned) do not."""
     return input_clean is True
@@ -230,10 +230,10 @@ def record_principal_input(text: str, spans: Sequence[Span] | None = None, *,
     Binds per ruling 3.1 FIRST (a new input is a new request even when its
     recording then faults). ``spans=None`` means no span structure was declared:
     the whole text is one PRINCIPAL span whose entries carry
-    ``span_declared=False`` (C-1). Given spans must concatenate to ``text``
+    ``span_declared=False``. Given spans must concatenate to ``text``
     exactly, else nothing is recorded and FAULT is returned. Unless
     ``input_clean is True``, every candidate is UNTRUSTED_SOURCE and no n-gram is
-    recorded (V-9, ruling 3.5). Called AFTER the input scan.
+    recorded (ruling 3.5). Called AFTER the input scan.
     """
     try:
         lg = _bind_for_input()
@@ -255,7 +255,7 @@ def record_principal_input(text: str, spans: Sequence[Span] | None = None, *,
         clean = _principal_clean(input_clean)
         dests: List[Tuple[bytes, Entry]] = []
         grams: List[Tuple[bytes, bool]] = []
-        for span_text, writer in span_list:            # left to right (V-24)
+        for span_text, writer in span_list:            # left to right
             is_principal = writer is Writer.PRINCIPAL and clean
             origin = Origin.PRINCIPAL if is_principal else Origin.UNTRUSTED_SOURCE
             for _, a in prose_candidates(span_text):   # per span: no straddling
@@ -275,7 +275,7 @@ def record_principal_input(text: str, spans: Sequence[Span] | None = None, *,
         return RecordOutcome.FAULT
 
 
-# ── tool results (C-2, C-3, C-3a, V-8, V-15) ─────────────────────────────────
+# ── tool results ─────────────────────────────────────────────────────────────
 class _KeyPlan:
     __slots__ = ("present", "ngram", "authority")
 
@@ -289,9 +289,9 @@ class _KeyPlan:
 
 def _key_basis(lg: _Ledger, k: _KeyPlan) -> Optional[bool]:
     """None if the key is unauthorized; else whether a DECLARED basis
-    authorizes it (C-3a). Caller holds the lock."""
+    authorizes it. Caller holds the lock."""
     if not k.present:
-        return None                                    # V-8(b)
+        return None                                    # an absent key authorizes nothing
     bases = []
     if k.ngram is not None and k.ngram in lg.ngrams:
         bases.append(lg.ngrams[k.ngram])
@@ -303,7 +303,7 @@ def _key_basis(lg: _Ledger, k: _KeyPlan) -> Optional[bool]:
 
 
 def _read_declared(bases: List[bool]) -> bool:
-    """C-3a: a trusted read is only as declared as its weakest key."""
+    """A trusted read is only as declared as its weakest key."""
     return all(bases)
 
 
@@ -322,8 +322,8 @@ def _read_trust(lg: _Ledger, plans: List[Tuple[SourceDesignation, List[_KeyPlan]
                 result_blocked: Optional[bool]) -> Entry:
     """The origin of this read's emissions. TRUSTED iff a designation matches
     AND every one of its key args is authorized AND the result scan ran and did
-    not block (C-3). Several matching designations: ANY that authorizes; the
-    first such in the operator's order supplies the label (V-8f)."""
+    not block. Several matching designations: ANY that authorizes; the
+    first such in the operator's order supplies the label."""
     if result_blocked is not False:
         return (Origin.UNTRUSTED_SOURCE, True, None)
     for d, keys in plans:
@@ -335,7 +335,7 @@ def _read_trust(lg: _Ledger, plans: List[Tuple[SourceDesignation, List[_KeyPlan]
 
 def result_authorities(result: Any) -> List[Authority]:
     """Every destination candidate in a raw result: each leaf tried whole, and
-    scanned as prose (C-7). May run host code (V-15)."""
+    scanned as prose. May run host code."""
     out: List[Authority] = []
     seen = set()
     for leaf in result_leaves(result):
@@ -357,14 +357,14 @@ def record_tool_result(tool_name: str, arguments: Mapping[str, object] | None,
                        result: object, *, designations: Sequence[SourceDesignation],
                        result_blocked: bool | None) -> RecordOutcome:
     """Record every destination candidate in a tool's RAW result at the origin
-    C-2/C-3 give it. ``result_blocked``: False = scanned as ``tool_result`` and
+    ``_read_trust`` gives it. ``result_blocked``: False = scanned as ``tool_result`` and
     neither blocked nor approval_required (pre-mode); True = it was; None = not
     scanned, which can never produce a trusted source. Does not bind."""
     try:
         lg = _current()
         if lg is None:
             return RecordOutcome.NO_LEDGER
-        # Everything that can run host code, BEFORE the lock (C-15).
+        # Everything that can run host code, BEFORE the lock.
         auths = result_authorities(result)
         plans = []
         for d in designations:
